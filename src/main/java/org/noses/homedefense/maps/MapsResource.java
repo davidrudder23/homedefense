@@ -12,7 +12,7 @@ public class MapsResource {
     MapsImporter mapsImporter;
 
     @GET
-    public void doImport() throws IOException {
+    public void doImport() throws Exception {
         mapsImporter.doImport();
     }
 }
