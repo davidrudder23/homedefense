@@ -109,7 +109,10 @@ public class MapsImporter extends DefaultHandler {
             //way.setName(attributes.getValue("way"));
         } else if (qName.equalsIgnoreCase("nd")) {
             if (way != null) {
-                way.addNode(parseLong(attributes.getValue("ref")));
+                WayNode wayNode = new WayNode();
+                wayNode.getWayNodeKey().setWay(way.getId());
+                wayNode.getWayNodeKey().setNode(parseLong(attributes.getValue("ref")));
+                template.insert(wayNode);
             }
         } else if (qName.equalsIgnoreCase("tag")) {
             if (way != null) {

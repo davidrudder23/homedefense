@@ -22,13 +22,4 @@ public class Way {
 
     private boolean oneWay;
 
-    List<Long> nodes;
-
-    public void addNode(Long nodeId) {
-        if (nodes == null) {
-            nodes = new ArrayList<>();
-        }
-        nodes.add(nodeId);
-    }
-
 }
