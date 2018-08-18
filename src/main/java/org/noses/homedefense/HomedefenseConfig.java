@@ -16,11 +16,11 @@ import java.util.List;
 @Configuration
 @EnableCassandraRepositories(basePackages = { "org.noses.homedefense.maps" })
 public class HomedefenseConfig extends AbstractCassandraConfiguration {
-    public static final String KEYSPACE = "dev";
+    public static final String KEYSPACE = "maps";
 
     @Override
     public SchemaAction getSchemaAction() {
-        return SchemaAction.NONE;
+        return SchemaAction.CREATE_IF_NOT_EXISTS;
     }
 
     @Override

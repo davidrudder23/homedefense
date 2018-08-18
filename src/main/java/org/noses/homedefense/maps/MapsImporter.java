@@ -48,7 +48,7 @@ public class MapsImporter extends DefaultHandler {
 
     public void doImport(InputSource in) throws Exception {
         Cluster cluster = Cluster.builder().addContactPoints("localhost").build();
-        Session session = cluster.connect("dev");
+        Session session = cluster.connect("maps");
 
         template = new CassandraTemplate(session);
 
@@ -83,9 +83,16 @@ public class MapsImporter extends DefaultHandler {
         if (qName.equalsIgnoreCase("node")) {
             Node node = new Node();
             node.setId(parseLong(attributes.getValue("id")));
-            node.setLat(parseFloat(attributes.getValue("lat")));
-            node.setLon(parseFloat(attributes.getValue("lon")));
-            template.insert(node);
+            node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
+            node.getPoint().setLon(parseFloat(attributes.getValue("lon")));
+
+            if ((node.getPoint().getLat()>39.7198) && (node.getPoint().getLat()<=39.7216) &&
+                    (node.getPoint().getLon()>=-104.9881) && (node.getPoint().getLon()<=-104.9840)) {
+                template.insert(node);
+            }
+            else {
+                template.insert(node);
+            }
             //log.info("count={}", count++);
         } else if (qName.equalsIgnoreCase("way")) {
             if (way != null) {
