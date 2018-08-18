@@ -1,23 +1,20 @@
 package org.noses.homedefense.maps;
 
+import com.datastax.driver.core.DataType;
 import lombok.Data;
+import org.springframework.data.cassandra.core.mapping.CassandraType;
+import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.Table;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import java.math.BigDecimal;
-
-@Entity
+@Table("node")
 @Data
 public class Node {
 
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    @Id
-    private Long id;
+    @PrimaryKey
+    @CassandraType(type = DataType.Name.BIGINT)
+    private long id;
 
-    private BigDecimal lat;
-
-    private BigDecimal lon;
+    private float lat;
+    private float lon;
 
 }

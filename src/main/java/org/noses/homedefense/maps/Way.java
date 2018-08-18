@@ -1,24 +1,24 @@
 package org.noses.homedefense.maps;
 
-import javax.persistence.*;
+import lombok.Data;
+import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.mapping.Table;
+
 import java.util.List;
 
-@Entity
+@Table
+@Data
 public class Way {
 
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    @Id
-    private Long id;
-
-    @OneToMany
-    private List<Node> nodes;
+    @PrimaryKey
+    private long id;
 
     private String name;
 
-    private Integer lanes;
+    private int lanes;
 
-    private Integer maxSpeed;
+    private int maxSpeed;
 
-    private Boolean oneWay;
+    private boolean oneWay;
 
 }
