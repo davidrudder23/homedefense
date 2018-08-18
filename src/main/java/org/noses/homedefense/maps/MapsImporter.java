@@ -27,6 +27,9 @@ public class MapsImporter extends DefaultHandler {
     @Autowired
     private NodeRepository nodeRepository;
 
+    @Autowired
+    private WayRepository wayRepository;
+
     @Value( "${maps.filename}" )
     private String mapsFilename;
 
@@ -79,10 +82,9 @@ public class MapsImporter extends DefaultHandler {
 
         if (qName.equalsIgnoreCase("node")) {
             Node node = new Node();
-            node.setId(Long.parseLong(attributes.getValue("id")));
-            node.setLat(Float.parseFloat(attributes.getValue("lat")));
-            node.setLon(Float.parseFloat(attributes.getValue("lon")));
-            //nodeRepository.save(node);
+            node.setId(parseLong(attributes.getValue("id")));
+            node.setLat(parseFloat(attributes.getValue("lat")));
+            node.setLon(parseFloat(attributes.getValue("lon")));
             template.insert(node);
             //log.info("count={}", count++);
         } else if (qName.equalsIgnoreCase("way")) {
@@ -91,10 +93,68 @@ public class MapsImporter extends DefaultHandler {
             }
 
             way = new Way();
-            way.setId(Long.parseLong(attributes.getValue("id")));
+            // set reasonable defaults
+            way.setOneWay(false);
+            way.setMaxSpeed(25);
+            way.setLanes(1);
+            way.setName("Unnamed Street");
+            way.setId(parseLong(attributes.getValue("id")));
             //way.setName(attributes.getValue("way"));
+        } else if (qName.equalsIgnoreCase("nd")) {
+            if (way != null) {
+                way.addNode(parseLong(attributes.getValue("ref")));
+            }
+        } else if (qName.equalsIgnoreCase("tag")) {
+            if (way != null) {
+                if ("name".equalsIgnoreCase(attributes.getValue("k"))) {
+                    way.setName(attributes.getValue("v"));
+                } else if ("lanes".equalsIgnoreCase(attributes.getValue("k"))) {
+                    // lanes requires a little more processing. If it has a semi-colon in it,
+                    // it means the road has a different number of lanes in each direction
+                    // or, there is a commuter lane or something else weird
+                    // we really don't care about that, so just choose the 1st one
+                    String lanes = attributes.getValue("v");
+                    if (lanes.contains(";")) {
+                        lanes = lanes.substring(0, lanes.indexOf(";"));
+                    }
+                    way.setLanes(parseInt(lanes));
+                } else if ("maxspeed".equalsIgnoreCase(attributes.getValue("k"))) {
+                    way.setMaxSpeed(parseInt(attributes.getValue("v").replaceAll("[^\\d.]", "")));
+                } else if ("oneway".equalsIgnoreCase(attributes.getValue("k"))) {
+                    way.setOneWay("yes".equalsIgnoreCase(attributes.getValue("v")));
+                }
+            }
         }
     }
+
+    int parseInt(String input) {
+        try {
+            return Integer.parseInt(input);
+        } catch (Exception e) {
+            log.warn("Could not parse {} as an integer", input);
+            return 0;
+        }
+    }
+
+    long parseLong(String input) {
+        try {
+            return Long.parseLong(input);
+        } catch (Exception e) {
+            log.warn("Could not parse {} as a long", input);
+            return 0;
+        }
+    }
+
+    float parseFloat(String input) {
+        try {
+            return Float.parseFloat(input);
+        } catch (Exception e) {
+            log.warn("Could not parse {} as a float", input);
+            return 0;
+        }
+    }
+
+
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
@@ -103,6 +163,7 @@ public class MapsImporter extends DefaultHandler {
         log.debug("end element qName={}", qName);
 
         if (qName.equalsIgnoreCase("way")) {
+            template.insert(way);
             way = null;
         }
     }

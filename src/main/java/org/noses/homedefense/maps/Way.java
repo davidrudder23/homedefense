@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Table
@@ -20,5 +21,14 @@ public class Way {
     private int maxSpeed;
 
     private boolean oneWay;
+
+    List<Long> nodes;
+
+    public void addNode(Long nodeId) {
+        if (nodes == null) {
+            nodes = new ArrayList<>();
+        }
+        nodes.add(nodeId);
+    }
 
 }
