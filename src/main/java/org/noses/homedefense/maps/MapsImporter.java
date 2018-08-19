@@ -25,10 +25,7 @@ import java.math.BigDecimal;
 public class MapsImporter extends DefaultHandler {
 
     @Autowired
-    private NodeRepository nodeRepository;
-
-    @Autowired
-    private WayRepository wayRepository;
+    private MapsRepository mapsRepository;
 
     @Value( "${maps.filename}" )
     private String mapsFilename;
@@ -39,18 +36,13 @@ public class MapsImporter extends DefaultHandler {
 
     private Way way;
 
-    CassandraOperations template;
-
     public void doImport() throws Exception {
         InputSource in = new InputSource(new FileInputStream(mapsFilename));
         doImport(in);
     }
 
     public void doImport(InputSource in) throws Exception {
-        Cluster cluster = Cluster.builder().addContactPoints("localhost").build();
-        Session session = cluster.connect("maps");
-
-        template = new CassandraTemplate(session);
+        mapsRepository.init();
 
         SAXParserFactory spf = SAXParserFactory.newInstance();
         spf.setNamespaceAware(true);
@@ -88,10 +80,10 @@ public class MapsImporter extends DefaultHandler {
 
             if ((node.getPoint().getLat()>39.7198) && (node.getPoint().getLat()<=39.7216) &&
                     (node.getPoint().getLon()>=-104.9881) && (node.getPoint().getLon()<=-104.9840)) {
-                template.insert(node);
+                mapsRepository.insertNode(node);
             }
             else {
-                template.insert(node);
+                mapsRepository.insertNode(node);
             }
             //log.info("count={}", count++);
         } else if (qName.equalsIgnoreCase("way")) {
@@ -112,7 +104,7 @@ public class MapsImporter extends DefaultHandler {
                 WayNode wayNode = new WayNode();
                 wayNode.getWayNodeKey().setWay(way.getId());
                 wayNode.getWayNodeKey().setNode(parseLong(attributes.getValue("ref")));
-                template.insert(wayNode);
+                mapsRepository.insertWayNode(wayNode);
             }
         } else if (qName.equalsIgnoreCase("tag")) {
             if (way != null) {
@@ -173,7 +165,7 @@ public class MapsImporter extends DefaultHandler {
         log.debug("end element qName={}", qName);
 
         if (qName.equalsIgnoreCase("way")) {
-            template.insert(way);
+            mapsRepository.insertWay(way);
             way = null;
         }
     }
