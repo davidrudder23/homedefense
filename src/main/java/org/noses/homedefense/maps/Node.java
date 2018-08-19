@@ -12,8 +12,6 @@ public class Node {
     @PrimaryKey
     private Point point;
 
-    private long id;
-
     public Node() {
         point = new Point();
         point.setPartitionId(1);
@@ -32,6 +30,10 @@ class Point {
 
     @PrimaryKeyColumn(name = "lon", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
     private float lon;
+
+    @PrimaryKeyColumn(name = "id", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+    private long id;
+
 
     public void setLon(float lon) {
         this.lon = lon;

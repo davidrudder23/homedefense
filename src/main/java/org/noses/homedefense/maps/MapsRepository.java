@@ -11,6 +11,7 @@ import org.springframework.data.cassandra.core.query.Criteria;
 import org.springframework.data.cassandra.core.query.Query;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,22 +44,13 @@ public class MapsRepository {
     }
 
     public List<Node> getNodes(float north, float west, float south, float east) {
-        int westPartitionId = Math.round((west+180)/10);
-        int eastPartitionId = Math.round((east+180)/10);
+        int westPartitionId = Math.round((west + 180) / 10);
+        int eastPartitionId = Math.round((east + 180) / 10);
 
-        Select select = QueryBuilder.select().from("node")
-                .where(QueryBuilder.eq("partition_id", westPartitionId))
-                .and(QueryBuilder.lte("lat", north))
-                .and(QueryBuilder.gte("lat", south))
-                .and(QueryBuilder.lte("lon", east))
-                .and(QueryBuilder.gte("lon", west))
-                .limit(100000)
-                .allowFiltering();
-        List<Node> nodes = template.select(select, Node.class);
-
-        if (eastPartitionId != westPartitionId) {
-            select = QueryBuilder.select().from("node")
-                    .where(QueryBuilder.eq("partition_id", eastPartitionId))
+        List<Node> nodes = new ArrayList<>();
+        for (int partitionId = westPartitionId; partitionId <= eastPartitionId; partitionId++) {
+            Select select = QueryBuilder.select().from("node")
+                    .where(QueryBuilder.eq("partition_id", westPartitionId))
                     .and(QueryBuilder.lte("lat", north))
                     .and(QueryBuilder.gte("lat", south))
                     .and(QueryBuilder.lte("lon", east))
@@ -70,17 +62,27 @@ public class MapsRepository {
         return nodes;
     }
 
+    public List<Node> getNodesForWays(List<Long> nodeIds) {
+        Select select = QueryBuilder.select().from("node")
+                .where(QueryBuilder.eq("partition_id", 8))
+                .and(QueryBuilder.in("id", nodeIds))
+                .limit(100000);
+        List<Node> nodes = template.select(select, Node.class);
+        return nodes;
+    }
+
     public List<WayNode> getWayNodes(List<Long> nodeIds) {
-        Select select =  QueryBuilder.select().from("waynode")
+        Select select = QueryBuilder.select().from("waynode")
                 .where(QueryBuilder.eq("partition_id", 1))
                 .and(QueryBuilder.in("node", nodeIds))
-                .limit(100000);
+                .limit(nodeIds.size())
+                .allowFiltering();
         List<WayNode> wayNodes = template.select(select, WayNode.class);
         return wayNodes;
     }
 
     public List<Way> getWays(List<Long> wayIds) {
-        Select select =  QueryBuilder.select().from("way")
+        Select select = QueryBuilder.select().from("way")
                 .where(QueryBuilder.in("id", wayIds))
                 .limit(100000);
         List<Way> ways = template.select(select, Way.class);

@@ -74,7 +74,7 @@ public class MapsImporter extends DefaultHandler {
 
         if (qName.equalsIgnoreCase("node")) {
             Node node = new Node();
-            node.setId(parseLong(attributes.getValue("id")));
+            node.getPoint().setId(parseLong(attributes.getValue("id")));
             node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
             node.getPoint().setLon(parseFloat(attributes.getValue("lon")));
 
