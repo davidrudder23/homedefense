@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,8 +21,13 @@ public class MapsReader {
                         float south,
                         float east) {
         List<Node> nodes = mapsRepository.getNodes(north, west, south, east);
-        List<WayNode> wayNodes = mapsRepository.getWayNodes(nodes.stream().map(n -> n.getPoint().getId()).collect(Collectors.toList()));
-        List<Way> ways = mapsRepository.getWays(wayNodes.stream().map(wn -> wn.getWayNodeKey().getWay()).collect(Collectors.toList()));
+        List<WayNode> wayNodes = mapsRepository.getWayNodes(nodes.stream().map(n -> n.getPoint().getId()).collect(Collectors.toList()))
+                .stream()
+                .sorted(Comparator.comparingInt(WayNode::getOrder))
+                .collect(Collectors.toList());
+        List<Way> ways = mapsRepository.getWays(wayNodes.stream()
+                .map(wn -> wn.getWayNodeKey().getWay())
+                .collect(Collectors.toList()));
         // Now, get all the nodes for the ways
         List<Long> nodeIds = new ArrayList<>();
         for (Way way: ways) {
@@ -46,13 +52,14 @@ public class MapsReader {
             wayDTO.setLanes(way.getLanes());
             wayDTO.setName(way.getName());
             wayDTO.setMaxSpeed(way.getMaxSpeed());
+            wayDTO.setHighway(way.getHighway());
 
             for (WayNode wayNode : wayNodes) {
                 if (wayNode.getWayNodeKey().getWay() == way.getId()) {
                     Node node = nodes.stream().filter(n->n.getPoint().getId() == wayNode.getWayNodeKey().getNode()).findFirst().get();
                     int x = (int)((node.getPoint().getLon()-west)/pixelWidth);
-                    int y = (int)((node.getPoint().getLat()-south)/pixelHeight);
-                    wayDTO.getNodes().add(new NodeDTO(x, y));
+                    int y = height-(int)((node.getPoint().getLat()-south)/pixelHeight);
+                    wayDTO.getNodes().add(new NodeDTO(x, y, node.getPoint().getLat(), node.getPoint().getLon(), node.getPoint().getId(), wayNode.getOrder()));
                     continue;
                 }
             }

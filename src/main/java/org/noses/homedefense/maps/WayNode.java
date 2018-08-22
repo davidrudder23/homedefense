@@ -13,6 +13,8 @@ public class WayNode {
     @PrimaryKey
     private WayNodeKey wayNodeKey;
 
+    private int order;
+
     public WayNode() {
         wayNodeKey = new WayNodeKey();
         wayNodeKey.setPartitionId(1);

@@ -22,4 +22,6 @@ public class Way {
 
     private boolean oneWay;
 
+    private String highway;
+
 }

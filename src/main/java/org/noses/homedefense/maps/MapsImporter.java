@@ -32,7 +32,7 @@ public class MapsImporter extends DefaultHandler {
 
     private int level;
 
-    private int count;
+    private int order;
 
     private Way way;
 
@@ -98,12 +98,14 @@ public class MapsImporter extends DefaultHandler {
             way.setLanes(1);
             way.setName("Unnamed Street");
             way.setId(parseLong(attributes.getValue("id")));
+            order = 0;
             //way.setName(attributes.getValue("way"));
         } else if (qName.equalsIgnoreCase("nd")) {
             if (way != null) {
                 WayNode wayNode = new WayNode();
                 wayNode.getWayNodeKey().setWay(way.getId());
                 wayNode.getWayNodeKey().setNode(parseLong(attributes.getValue("ref")));
+                wayNode.setOrder(order++);
                 mapsRepository.insertWayNode(wayNode);
             }
         } else if (qName.equalsIgnoreCase("tag")) {
@@ -124,6 +126,8 @@ public class MapsImporter extends DefaultHandler {
                     way.setMaxSpeed(parseInt(attributes.getValue("v").replaceAll("[^\\d.]", "")));
                 } else if ("oneway".equalsIgnoreCase(attributes.getValue("k"))) {
                     way.setOneWay("yes".equalsIgnoreCase(attributes.getValue("v")));
+                } else if ("highway".equalsIgnoreCase(attributes.getValue("k"))) {
+                    way.setHighway(attributes.getValue("v"));
                 }
             }
         }
@@ -165,7 +169,9 @@ public class MapsImporter extends DefaultHandler {
         log.debug("end element qName={}", qName);
 
         if (qName.equalsIgnoreCase("way")) {
-            mapsRepository.insertWay(way);
+            if ((way.getHighway()!=null) && (!"service".equalsIgnoreCase(way.getHighway()))) {
+                mapsRepository.insertWay(way);
+            }
             way = null;
         }
     }

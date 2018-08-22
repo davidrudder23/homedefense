@@ -26,6 +26,7 @@ class WayDTO {
     String name;
     int lanes;
     int maxSpeed;
+    String highway;
 
     List<NodeDTO> nodes;
 
@@ -43,5 +44,12 @@ class WayDTO {
 class NodeDTO {
     int x;
     int y;
+
+    float lat;
+    float lon;
+
+    long id;
+
+    int order;
 }
 
