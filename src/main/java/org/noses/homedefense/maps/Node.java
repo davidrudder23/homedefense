@@ -25,18 +25,17 @@ class Point {
     @PrimaryKeyColumn(name = "partition_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private int partitionId;
 
+    @PrimaryKeyColumn(name = "id", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+    private long id;
+
     @PrimaryKeyColumn(name = "lat", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
     private float lat;
 
     @PrimaryKeyColumn(name = "lon", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
     private float lon;
 
-    @PrimaryKeyColumn(name = "id", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private long id;
-
-
-    public void setLon(float lon) {
-        this.lon = lon;
-        partitionId = Math.round((lon+180)/10);
+    public void setId(long id) {
+        this.id = id;
+        partitionId = (int)(id % 100);
     }
 }

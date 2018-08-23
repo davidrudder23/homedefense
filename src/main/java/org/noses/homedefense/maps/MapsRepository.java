@@ -43,6 +43,20 @@ public class MapsRepository {
         template.insert(wayNode);
     }
 
+    public Node getNode(long nodeId) {
+        Select select = QueryBuilder.select().from("node")
+                .where(QueryBuilder.eq("partition_id", nodeId % 100))
+                .and(QueryBuilder.eq("id", nodeId))
+                .limit(1);
+        List<Node> nodes = template.select(select, Node.class);
+
+        if ((nodes == null) || (nodes.size()==0)) {
+            return null;
+        } else {
+            return nodes.get(0);
+        }
+    }
+
     public List<Node> getNodes(float north, float west, float south, float east) {
         int westPartitionId = Math.round((west + 180) / 10);
         int eastPartitionId = Math.round((east + 180) / 10);
@@ -60,6 +74,25 @@ public class MapsRepository {
             nodes.addAll(template.select(select, Node.class));
         }
         return nodes;
+    }
+
+    public List<WayNode> getWayNodes(float north, float west, float south, float east) {
+        int westPartitionId = Math.round((west + 180) / 10);
+        int eastPartitionId = Math.round((east + 180) / 10);
+
+        List<WayNode> wayNodes = new ArrayList<>();
+        for (int partitionId = westPartitionId; partitionId <= eastPartitionId; partitionId++) {
+            Select select = QueryBuilder.select().from("wayNode")
+                    .where(QueryBuilder.eq("partition_id", partitionId))
+                    .and(QueryBuilder.lte("lat", north))
+                    .and(QueryBuilder.gte("lat", south))
+                    .and(QueryBuilder.lte("lon", east))
+                    .and(QueryBuilder.gte("lon", west))
+                    .limit(100000)
+                    .allowFiltering();
+            wayNodes.addAll(template.select(select, WayNode.class));
+        }
+        return wayNodes;
     }
 
     public List<Node> getNodesForWays(List<Long> nodeIds) {

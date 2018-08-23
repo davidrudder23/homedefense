@@ -20,8 +20,7 @@ public class MapsReader {
                         float west,
                         float south,
                         float east) {
-        List<Node> nodes = mapsRepository.getNodes(north, west, south, east);
-        List<WayNode> wayNodes = mapsRepository.getWayNodes(nodes.stream().map(n -> n.getPoint().getId()).collect(Collectors.toList()))
+        List<WayNode> wayNodes = mapsRepository.getWayNodes(north, west, south, east)
                 .stream()
                 .sorted(Comparator.comparingInt(WayNode::getOrder))
                 .collect(Collectors.toList());
@@ -33,12 +32,10 @@ public class MapsReader {
         for (Way way: ways) {
             for (WayNode wayNode: wayNodes) {
                 if (wayNode.getWayNodeKey().getWay() == way.getId()) {
-                    nodeIds.add(wayNode.getWayNodeKey().getNode());
                     continue;
                 }
             }
         }
-        nodes = mapsRepository.getNodesForWays(nodeIds);
 
         MapDTO mapDTO = new MapDTO();
         mapDTO.setWidth(width);
@@ -56,10 +53,11 @@ public class MapsReader {
 
             for (WayNode wayNode : wayNodes) {
                 if (wayNode.getWayNodeKey().getWay() == way.getId()) {
-                    Node node = nodes.stream().filter(n->n.getPoint().getId() == wayNode.getWayNodeKey().getNode()).findFirst().get();
-                    int x = (int)((node.getPoint().getLon()-west)/pixelWidth);
-                    int y = height-(int)((node.getPoint().getLat()-south)/pixelHeight);
-                    wayDTO.getNodes().add(new NodeDTO(x, y, node.getPoint().getLat(), node.getPoint().getLon(), node.getPoint().getId(), wayNode.getOrder()));
+                    int x = (int)((wayNode.getWayNodeKey().getLon()-west)/pixelWidth);
+                    int y = height-(int)((wayNode.getWayNodeKey().getLat()-south)/pixelHeight);
+                    wayDTO.getNodes().add(new NodeDTO(x, y,
+                            wayNode.getWayNodeKey().getLat(), wayNode.getWayNodeKey().getLon(),
+                            wayNode.getWayNodeKey().getId(), wayNode.getOrder()));
                     continue;
                 }
             }

@@ -17,8 +17,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -27,7 +27,7 @@ public class MapsImporter extends DefaultHandler {
     @Autowired
     private MapsRepository mapsRepository;
 
-    @Value( "${maps.filename}" )
+    @Value("${maps.filename}")
     private String mapsFilename;
 
     private int level;
@@ -35,6 +35,10 @@ public class MapsImporter extends DefaultHandler {
     private int order;
 
     private Way way;
+
+    private long wayNodeId;
+
+    private List<WayNode> wayNodes;
 
     public void doImport() throws Exception {
         InputSource in = new InputSource(new FileInputStream(mapsFilename));
@@ -57,6 +61,7 @@ public class MapsImporter extends DefaultHandler {
         super.startDocument();
         log.debug("startDocument");
         level = 0;
+        wayNodeId = 0;
     }
 
     @Override
@@ -69,7 +74,7 @@ public class MapsImporter extends DefaultHandler {
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         super.startElement(uri, localName, qName, attributes);
-        level ++;
+        level++;
         log.debug("start element qName={} level={}", qName, level);
 
         if (qName.equalsIgnoreCase("node")) {
@@ -78,13 +83,7 @@ public class MapsImporter extends DefaultHandler {
             node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
             node.getPoint().setLon(parseFloat(attributes.getValue("lon")));
 
-            if ((node.getPoint().getLat()>39.7198) && (node.getPoint().getLat()<=39.7216) &&
-                    (node.getPoint().getLon()>=-104.9881) && (node.getPoint().getLon()<=-104.9840)) {
-                mapsRepository.insertNode(node);
-            }
-            else {
-                mapsRepository.insertNode(node);
-            }
+            mapsRepository.insertNode(node);
             //log.info("count={}", count++);
         } else if (qName.equalsIgnoreCase("way")) {
             if (way != null) {
@@ -99,14 +98,18 @@ public class MapsImporter extends DefaultHandler {
             way.setName("Unnamed Street");
             way.setId(parseLong(attributes.getValue("id")));
             order = 0;
-            //way.setName(attributes.getValue("way"));
-        } else if (qName.equalsIgnoreCase("nd")) {
+
+            wayNodes = new ArrayList<>();
+
+                //way.setName(attributes.getValue("way"));
+        } else if (qName.equalsIgnoreCase("nd")) {  // waynode
             if (way != null) {
                 WayNode wayNode = new WayNode();
                 wayNode.getWayNodeKey().setWay(way.getId());
-                wayNode.getWayNodeKey().setNode(parseLong(attributes.getValue("ref")));
+                wayNode.getWayNodeKey().setId(wayNodeId++);
                 wayNode.setOrder(order++);
-                mapsRepository.insertWayNode(wayNode);
+                wayNode.setNode(parseLong(attributes.getValue("ref")));
+                wayNodes.add(wayNode);
             }
         } else if (qName.equalsIgnoreCase("tag")) {
             if (way != null) {
@@ -130,6 +133,30 @@ public class MapsImporter extends DefaultHandler {
                     way.setHighway(attributes.getValue("v"));
                 }
             }
+        }
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        super.endElement(uri, localName, qName);
+        level--;
+        log.debug("end element qName={}", qName);
+
+        if (qName.equalsIgnoreCase("way")) {
+            if ((way.getHighway() != null) &&
+                    (!"footway".equalsIgnoreCase(way.getHighway())) &&
+                    (!"service".equalsIgnoreCase(way.getHighway())) &&
+                    (!"path".equalsIgnoreCase(way.getHighway()))) {
+                mapsRepository.insertWay(way);
+
+                for (WayNode wayNode: wayNodes) {
+                    Node node = mapsRepository.getNode(wayNode.getNode());
+                    wayNode.getWayNodeKey().setLat(node.getPoint().getLat());
+                    wayNode.getWayNodeKey().setLon(node.getPoint().getLon());
+                    mapsRepository.insertWayNode(wayNode);
+                }
+            }
+            way = null;
         }
     }
 
@@ -157,22 +184,6 @@ public class MapsImporter extends DefaultHandler {
         } catch (Exception e) {
             log.warn("Could not parse {} as a float", input);
             return 0;
-        }
-    }
-
-
-
-    @Override
-    public void endElement(String uri, String localName, String qName) throws SAXException {
-        super.endElement(uri, localName, qName);
-        level--;
-        log.debug("end element qName={}", qName);
-
-        if (qName.equalsIgnoreCase("way")) {
-            if ((way.getHighway()!=null) && (!"service".equalsIgnoreCase(way.getHighway()))) {
-                mapsRepository.insertWay(way);
-            }
-            way = null;
         }
     }
 }

@@ -15,6 +15,8 @@ public class WayNode {
 
     private int order;
 
+    private long node;
+
     public WayNode() {
         wayNodeKey = new WayNodeKey();
         wayNodeKey.setPartitionId(1);
@@ -28,10 +30,22 @@ class WayNodeKey {
     @PrimaryKeyColumn(name = "partition_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private int partitionId;
 
+    @PrimaryKeyColumn(name = "lat", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+    private float lat;
+
+    @PrimaryKeyColumn(name = "lon", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+    private float lon;
+
+    @PrimaryKeyColumn(name = "id", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+    private long id;
+
     @PrimaryKeyColumn(name = "way", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
     private long way;
 
-    @PrimaryKeyColumn(name = "node", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private long node;
+
+    public void setLon(float lon) {
+        this.lon = lon;
+        partitionId = Math.round((lon+180)/10);
+    }
 
 }
