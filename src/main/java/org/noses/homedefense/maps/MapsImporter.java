@@ -77,7 +77,7 @@ public class MapsImporter extends DefaultHandler {
         level++;
         log.debug("start element qName={} level={}", qName, level);
 
-        if (qName.equalsIgnoreCase("node")) {
+        if (qName.equalsIgnoreCase("node") && (1==2)) {
             Node node = new Node();
             node.getPoint().setId(parseLong(attributes.getValue("id")));
             node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
@@ -105,9 +105,9 @@ public class MapsImporter extends DefaultHandler {
         } else if (qName.equalsIgnoreCase("nd")) {  // waynode
             if (way != null) {
                 WayNode wayNode = new WayNode();
-                wayNode.getWayNodeKey().setWay(way.getId());
+                wayNode.setWay(way.getId());
                 wayNode.getWayNodeKey().setId(wayNodeId++);
-                wayNode.setOrder(order++);
+                wayNode.setOrderNum(order++);
                 wayNode.setNode(parseLong(attributes.getValue("ref")));
                 wayNodes.add(wayNode);
             }
@@ -144,15 +144,30 @@ public class MapsImporter extends DefaultHandler {
 
         if (qName.equalsIgnoreCase("way")) {
             if ((way.getHighway() != null) &&
-                    (!"footway".equalsIgnoreCase(way.getHighway())) &&
-                    (!"service".equalsIgnoreCase(way.getHighway())) &&
-                    (!"path".equalsIgnoreCase(way.getHighway()))) {
+                    (("trunk".equalsIgnoreCase(way.getHighway())) ||
+                    ("primary".equalsIgnoreCase(way.getHighway())) ||
+                    ("secondary".equalsIgnoreCase(way.getHighway())) ||
+                    ("tertiary".equalsIgnoreCase(way.getHighway())) ||
+                    ("residential".equalsIgnoreCase(way.getHighway())) ||
+                    ("road".equalsIgnoreCase(way.getHighway())) ||
+                    ("motorway".equalsIgnoreCase(way.getHighway())))) {
+
+                // TODO: don't insert ways. They're not technically necessary, but in for
+                // debugging purposes
                 mapsRepository.insertWay(way);
 
                 for (WayNode wayNode: wayNodes) {
                     Node node = mapsRepository.getNode(wayNode.getNode());
                     wayNode.getWayNodeKey().setLat(node.getPoint().getLat());
                     wayNode.getWayNodeKey().setLon(node.getPoint().getLon());
+
+                    // Denormalize the data from _way_
+                    wayNode.setName(way.getName());
+                    wayNode.setLanes(way.getLanes());
+                    wayNode.setHighway(way.getHighway());
+                    wayNode.setMaxSpeed(way.getMaxSpeed());
+                    wayNode.setOneWay(way.isOneWay());
+
                     mapsRepository.insertWayNode(wayNode);
                 }
             }
