@@ -180,18 +180,46 @@ var Bullet = new Phaser.Class({
 
  
 function create() {
-    var graphics = this.add.graphics();    
+
+    var add = this.add;
+    this.paths = [];
+    var paths = this.paths;
+    var physics = this.physics;
+    var input = this.input;
+    var activePath = this.activePath;
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(location) {
+            console.log(add);
+            gotLocation(location, add, paths, physics, input, activePath);
+        });
+    } else {
+        console.log("Geolocation is not supported by this browser.");
+    }
+}
+
+function gotLocation(location, add, paths, physics, input, activePath) {
+    var graphics = add.graphics();
     drawLines(graphics);
 
-    this.paths = [];
-    paths = this.paths;
-    physics = this.physics;
-    add = this.add;
-    input = this.input;
     count = 0;
-    activePath = this.activePath;
 
-    $.get("/maps/640/480/39.7284/-104.9973/39.7131/-104.9651", function(data) {
+    var north = (location.coords.latitude + 0.0075).toFixed(4);
+    var west = (location.coords.longitude - 0.0150).toFixed(4);
+    var south = (location.coords.latitude - 0.0075).toFixed(4);
+    var east = (location.coords.longitude + 0.0150).toFixed(4);
+    console.log("north="+north);
+    console.log("west="+west);
+    console.log("south="+south);
+    console.log("east="+east);
+
+
+    $.get("/maps/640/480/"
+        +north+"/"
+        +west+"/"
+        +south+"/"
+        +east,
+        function(data) {
         $.each(data.ways, function(index, way) {
             //console.log(way);
             $.each(way.nodes, function(index, node) {

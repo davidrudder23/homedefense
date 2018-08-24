@@ -62,10 +62,10 @@ public class MapsRepository {
     }
 
     public List<WayNode> getWayNodes(float north, float west, float south, float east) {
-        int northPartitionId = Math.round((north + 180)*100);
-        int westPartitionId = Math.round((west + 180)*100);
-        int southPartitionId = Math.round((south + 180)*100);
-        int eastPartitionId = Math.round((east + 180)*100);
+        int northPartitionId = Math.round((north + 180)*100)+1;
+        int westPartitionId = Math.round((west + 180)*100)-1;
+        int southPartitionId = Math.round((south + 180)*100)-1;
+        int eastPartitionId = Math.round((east + 180)*100)+1;
 
 
 
