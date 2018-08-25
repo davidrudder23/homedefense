@@ -16,25 +16,18 @@ var config = {
 
 var game = new Phaser.Game(config);
 
-var paths;
-var activePath;
+var paths = [];
 var turrets;
 var enemies;
 
-var ENEMY_SPEED = 1/10000;
+var game;
+
+
+var ENEMY_SPEED = 1/250000;
 
 var BULLET_DAMAGE = 50;
 
-var map =  [[ 0,-1, 0, 0, 0, 0, 0, 0, 0, 0],
-            [ 0,-1, 0, 0, 0, 0, 0, 0, 0, 0],
-            [ 0,-1,-1,-1,-1,-1,-1,-1, 0, 0],
-            [ 0, 0, 0, 0, 0, 0, 0,-1, 0, 0],
-            [ 0, 0, 0, 0, 0, 0, 0,-1, 0, 0],
-            [ 0, 0, 0, 0, 0, 0, 0,-1, 0, 0],
-            [ 0, 0, 0, 0, 0, 0, 0,-1, 0, 0],
-            [ 0, 0, 0, 0, 0, 0, 0,-1, 0, 0]];
-
-function preload() {    
+function preload() {
     this.load.atlas('sprites', 'assets/spritesheet.png', 'assets/spritesheet.json');
     this.load.image('bullet', 'assets/bullet.png');
 }
@@ -42,7 +35,7 @@ function preload() {
 var Enemy = new Phaser.Class({
 
         Extends: Phaser.GameObjects.Image,
-
+        pathNum: 0,
         initialize:
 
         function Enemy (scene)
@@ -55,10 +48,17 @@ var Enemy = new Phaser.Class({
 
         startOnPath: function ()
         {
+            if (paths.length<=0) {
+                return;
+            }
             this.follower.t = 0;
             this.hp = 100;
-            
-            activePath.getPoint(this.follower.t, this.follower.vec);
+
+            this.pathNum = getRandomInt(paths.length-1);
+
+            console.log("starting on path "+this.pathNum);
+
+            paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
             
             this.setPosition(this.follower.vec.x, this.follower.vec.y);            
         },
@@ -73,9 +73,10 @@ var Enemy = new Phaser.Class({
         },
         update: function (time, delta)
         {
-            this.follower.t += ENEMY_SPEED * delta;
-            activePath.getPoint(this.follower.t, this.follower.vec);
-            
+            var path = paths[this.pathNum];
+            this.follower.t += ENEMY_SPEED * delta * path.speed;
+            path.getPoint(this.follower.t, this.follower.vec);
+
             this.setPosition(this.follower.vec.x, this.follower.vec.y);
 
             if (this.follower.t >= 1)
@@ -83,9 +84,13 @@ var Enemy = new Phaser.Class({
                 this.setActive(false);
                 this.setVisible(false);
             }
-        }
+        },
 
 });
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
 
 function getEnemy(x, y, distance) {
     var enemyUnits = enemies.getChildren();
@@ -110,7 +115,6 @@ var Turret = new Phaser.Class({
         place: function(i, j) {            
             this.y = i * 64 + 64/2;
             this.x = j * 64 + 64/2;
-            map[i][j] = 1;            
         },
         fire: function() {
             var enemy = getEnemy(this.x, this.y, 200);
@@ -181,26 +185,24 @@ var Bullet = new Phaser.Class({
  
 function create() {
 
-    var add = this.add;
-    this.paths = [];
-    var paths = this.paths;
-    var physics = this.physics;
-    var input = this.input;
-    var activePath = this.activePath;
+    game.add = this.add;
+    game.physics = this.physics;
+    game.input = this.input;
+    game.physics = this.physics;
+
+    enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
+
+    this.nextEnemy = 0;
 
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(location) {
-            console.log(add);
-            gotLocation(location, add, paths, physics, input, activePath);
-        });
+        navigator.geolocation.getCurrentPosition(gotLocation);
     } else {
-        console.log("Geolocation is not supported by this browser.");
+        $("#debug").text("Geolocation is not supported by this browser.");
     }
 }
 
-function gotLocation(location, add, paths, physics, input, activePath) {
-    var graphics = add.graphics();
-    drawLines(graphics);
+function gotLocation(location) {
+    var graphics = game.add.graphics();
 
     count = 0;
 
@@ -221,32 +223,29 @@ function gotLocation(location, add, paths, physics, input, activePath) {
         +east,
         function(data) {
         $.each(data.ways, function(index, way) {
-            //console.log(way);
             $.each(way.nodes, function(index, node) {
-                if (!paths[count]) {
-                    console.log("making path "+count);
-                    paths[count] = add.path(node.x, node.y);
+                if (paths.length <= count) {
+                    paths[count] = game.add.path(node.x, node.y);
+                    paths[count].speed = way.maxSpeed;
                 } else {
                     paths[count].lineTo(node.x, node.y);
                 }
 
             });
 
+            //graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt, 1);
             graphics.lineStyle(2, 0xffffff, 1);
             paths[count].draw(graphics);
-            enemies = physics.add.group({ classType: Enemy, runChildUpdate: true });
+            enemies = game.physics.add.group({ classType: Enemy, runChildUpdate: true });
 
-            turrets = add.group({ classType: Turret, runChildUpdate: true });
+            turrets = game.add.group({ classType: Turret, runChildUpdate: true });
 
-            bullets = physics.add.group({ classType: Bullet, runChildUpdate: true });
+            bullets = game.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
-            this.nextEnemy = 0;
+            game.physics.add.overlap(enemies, bullets, damageEnemy);
 
-            physics.add.overlap(enemies, bullets, damageEnemy);
+            game.input.on('pointerdown', placeTurret);
 
-            input.on('pointerdown', placeTurret);
-
-            activePath = paths[0];
             count++;
         });
     });
@@ -266,24 +265,13 @@ function damageEnemy(enemy, bullet) {
     }
 }
 
-function drawLines(graphics) {
-    graphics.lineStyle(1, 0x0000ff, 0.8);
-    for(var i = 0; i < 8; i++) {
-        graphics.moveTo(0, i * 64);
-        graphics.lineTo(640, i * 64);
-    }
-    for(var j = 0; j < 10; j++) {
-        graphics.moveTo(j * 64, 0);
-        graphics.lineTo(j * 64, 512);
-    }
-    graphics.strokePath();
-}
+function update(time, delta) {
 
-function update(time, delta) {  
-
-    /*if (time > this.nextEnemy)
+   // console.log("time="+time+", nextEnemy="+this.nextEnemy+" paths len="+paths.length);
+    if ((paths.length>0) && (time > this.nextEnemy))
     {
         var enemy = enemies.get();
+        console.log("Making new enemy - "+enemy);
         if (enemy)
         {
             enemy.setActive(true);
@@ -292,11 +280,11 @@ function update(time, delta) {
 
             this.nextEnemy = time + 2000;
         }       
-    }*/
+    }
 }
 
 function canPlaceTurret(i, j) {
-    return map[i][j] === 0;
+    return true;
 }
 
 function placeTurret(pointer) {

@@ -43,7 +43,10 @@ public class MapsRepository {
 
     public void insertWayNode(WayNode wayNode) {
 
-        wayNode.getWayNodeKey().setPartitionId(Math.round((wayNode.getWayNodeKey().getLon()+180)*100)+"x"+Math.round((wayNode.getWayNodeKey().getLat()+180)*100));
+        wayNode.getWayNodeKey().setPartitionId(
+                Math.round((wayNode.getWayNodeKey().getLon() + 180) * 200) +
+                "x" +
+                Math.round((wayNode.getWayNodeKey().getLat() + 180) * 200));
         template.insert(wayNode);
     }
 
@@ -62,12 +65,10 @@ public class MapsRepository {
     }
 
     public List<WayNode> getWayNodes(float north, float west, float south, float east) {
-        int northPartitionId = Math.round((north + 180)*100)+1;
-        int westPartitionId = Math.round((west + 180)*100)-1;
-        int southPartitionId = Math.round((south + 180)*100)-1;
-        int eastPartitionId = Math.round((east + 180)*100)+1;
-
-
+        int northPartitionId = Math.round((north + 180) * 200) + 1;
+        int westPartitionId = Math.round((west + 180) * 200) - 1;
+        int southPartitionId = Math.round((south + 180) * 200) - 1;
+        int eastPartitionId = Math.round((east + 180) * 200) + 1;
 
         List<String> partitionIds = new ArrayList<>();
 
@@ -89,7 +90,15 @@ public class MapsRepository {
                 }).flatMap(List::stream)
                 .collect(Collectors.toList());
 
+
+        /*
+        Select select = QueryBuilder.select().from("wayNode")
+                .where(QueryBuilder.in("partition_id", partitionIds))
+                .limit(1000000);
+        List<WayNode> wayNodes = template.select(select, WayNode.class);
+*/
         return wayNodes;
+
     }
 
     public WayNode getPreviousWayNodeForWay(long way, int firstOrder, int partitionId) {

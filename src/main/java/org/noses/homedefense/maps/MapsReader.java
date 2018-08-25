@@ -28,16 +28,21 @@ public class MapsReader {
         HashMap<Long, Way> ways = new HashMap<>();
         for (WayNode wayNode: wayNodes) {
             Long wayId = wayNode.getWay();
-            Way way = ways.get(wayId);
-            if (way == null) {
-                way = new Way();
-                way.setHighway(wayNode.getHighway());
-                way.setId(wayNode.getWay());
-                way.setName(wayNode.getName());
-                way.setLanes(wayNode.getLanes());
-                way.setMaxSpeed(wayNode.getMaxSpeed());
-                way.setOneWay(wayNode.isOneWay());
-                ways.put(new Long(wayNode.getWay()), way);
+            if ((wayNode.getWayNodeKey().getLon()>=west) &&
+                    (wayNode.getWayNodeKey().getLon()<=east) &&
+                    (wayNode.getWayNodeKey().getLat()>=south) &&
+                    (wayNode.getWayNodeKey().getLat()<=north)) {
+                Way way = ways.get(wayId);
+                if (way == null) {
+                    way = new Way();
+                    way.setHighway(wayNode.getHighway());
+                    way.setId(wayNode.getWay());
+                    way.setName(wayNode.getName());
+                    way.setLanes(wayNode.getLanes());
+                    way.setMaxSpeed(wayNode.getMaxSpeed());
+                    way.setOneWay(wayNode.isOneWay());
+                    ways.put(new Long(wayNode.getWay()), way);
+                }
             }
         }
 
