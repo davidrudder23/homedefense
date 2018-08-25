@@ -18,6 +18,7 @@ var game = new Phaser.Game(config);
 
 var paths = [];
 var turrets;
+var home;
 var enemies;
 
 var game;
@@ -25,10 +26,13 @@ var game;
 
 var ENEMY_SPEED = 1/250000;
 
+var MAX_ENEMIES = 5;
+
 var BULLET_DAMAGE = 50;
 
 function preload() {
-    this.load.atlas('sprites', 'assets/spritesheet.png', 'assets/spritesheet.json');
+//    this.load.atlas('sprites', 'assets/spritesheet.png', 'assets/spritesheet.json');
+    this.load.atlas('sprites', 'assets/handwriting_spritesheet.png', 'assets/handwriting_spritesheet.json');
     this.load.image('bullet', 'assets/bullet.png');
 }
 
@@ -56,8 +60,6 @@ var Enemy = new Phaser.Class({
 
             this.pathNum = getRandomInt(paths.length-1);
 
-            console.log("starting on path "+this.pathNum);
-
             paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
             
             this.setPosition(this.follower.vec.x, this.follower.vec.y);            
@@ -81,14 +83,12 @@ var Enemy = new Phaser.Class({
 
             if (this.follower.t >= 1)
             {
-                console.log ("enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
-
                 var foundNewPath = false;
                 for (var i = 0 ; i < paths.length; i++) {
                     //console.log("Comparing existing="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" vs path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y);
                     if ((paths[i].curves[0].p0.x == Math.round(this.follower.vec.x)) &&
                         (paths[i].curves[0].p0.y == Math.round(this.follower.vec.y))) {
-                        console.log(this.pathNum+" found new path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" with speed "+paths[i].speed);
+                        //console.log(this.pathNum+" found new path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" with speed "+paths[i].speed);
                         this.pathNum = i;
                         foundNewPath = true;
                         this.follower.t = 0;
@@ -97,6 +97,8 @@ var Enemy = new Phaser.Class({
                 }
 
                 if (!foundNewPath) {
+                    console.log (this.pathNum+" enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
+
                     this.setActive(false);
                     this.setVisible(false);
                 }
@@ -139,6 +141,37 @@ var Turret = new Phaser.Class({
                 var angle = Phaser.Math.Angle.Between(this.x, this.y, enemy.x, enemy.y);
                 addBullet(this.x, this.y, angle);
                 this.angle = (angle + Math.PI/2) * Phaser.Math.RAD_TO_DEG;
+            }
+        },
+        update: function (time, delta)
+        {
+            if(time > this.nextTic) {
+                this.fire();
+                this.nextTic = time + 1000;
+            }
+        }
+});
+
+var Home = new Phaser.Class({
+
+        Extends: Phaser.GameObjects.Image,
+
+        initialize:
+
+        function Turret (scene)
+        {
+            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'home');
+            this.nextTic = 0;
+        },
+        place: function(i, j) {
+            this.x = i;
+            this.y = j;
+        },
+        fire: function() {
+            var enemy = getEnemy(this.x, this.y, 200);
+            if(enemy) {
+                var angle = Phaser.Math.Angle.Between(this.x, this.y, enemy.x, enemy.y);
+                addBullet(this.x, this.y, angle);
             }
         },
         update: function (time, delta)
@@ -209,6 +242,17 @@ function create() {
 
     enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
 
+    turrets = this.add.group({ classType: Turret, runChildUpdate: true });
+
+    home = this.add.group({ classType: Home, runChildUpdate: true });
+
+    bullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
+
+
+    this.physics.add.overlap(enemies, bullets, damageEnemy);
+
+    this.input.on('pointerdown', placeTurret);
+
     this.nextEnemy = 0;
 
     if (navigator.geolocation) {
@@ -254,18 +298,10 @@ function gotLocation(location) {
             graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
             //graphics.lineStyle(2, 0xffffff, 1);
             paths[count].draw(graphics);
-            enemies = game.physics.add.group({ classType: Enemy, runChildUpdate: true });
-
-            turrets = game.add.group({ classType: Turret, runChildUpdate: true });
-
-            bullets = game.physics.add.group({ classType: Bullet, runChildUpdate: true });
-
-            game.physics.add.overlap(enemies, bullets, damageEnemy);
-
-            game.input.on('pointerdown', placeTurret);
 
             count++;
         });
+        placeHome();
     });
 
 
@@ -285,19 +321,24 @@ function damageEnemy(enemy, bullet) {
 
 function update(time, delta) {
 
-   // console.log("time="+time+", nextEnemy="+this.nextEnemy+" paths len="+paths.length);
+    // console.log("time="+time+", nextEnemy="+this.nextEnemy+" paths len="+paths.length);
     if ((paths.length>0) && (time > this.nextEnemy))
     {
-        var enemy = enemies.get();
-        console.log("Making new enemy - "+enemy);
-        if (enemy)
-        {
-            enemy.setActive(true);
-            enemy.setVisible(true);
-            enemy.startOnPath();
+        var numActiveEnemies = enemies.children.entries.filter(e=>e.active).length;
+        if (numActiveEnemies<MAX_ENEMIES) {
+            var enemy = enemies.get();
+            console.log("Making new enemy - "+enemy);
+            if (enemy)
+            {
+                enemy.setInteractive(true);
+                enemy.on("pointerdown", function(pointer) { console.log("enemy pointer down")}, this);
+                enemy.setActive(true);
+                enemy.setVisible(true);
+                enemy.startOnPath();
 
-            this.nextEnemy = time + 2000;
-        }       
+                this.nextEnemy = time + 2000;
+            }
+        }
     }
 }
 
@@ -306,6 +347,7 @@ function canPlaceTurret(i, j) {
 }
 
 function placeTurret(pointer) {
+    console.log("Place turret");
     var i = Math.floor(pointer.y/64);
     var j = Math.floor(pointer.x/64);
     if(canPlaceTurret(i, j)) {
@@ -316,6 +358,17 @@ function placeTurret(pointer) {
             turret.setVisible(true);
             turret.place(i, j);
         }   
+    }
+}
+
+function placeHome(pointer) {
+    console.log("Place home");
+    var house = home.get();
+    if (house)
+    {
+        house.setActive(true);
+        house.setVisible(true);
+        house.place(320, 240);
     }
 }
 

@@ -20,9 +20,9 @@ public class MapsResource {
     MapsReader mapsReader;
 
     @GET
-    @RequestMapping("/import")
-    public void doImport() throws Exception {
-        mapsImporter.doImport();
+    @RequestMapping("/import/{city}")
+    public void doImport(@PathVariable("city") String city) throws Exception {
+        mapsImporter.doImport(city);
     }
 
     @GET

@@ -40,8 +40,8 @@ public class MapsImporter extends DefaultHandler {
 
     private List<WayNode> wayNodes;
 
-    public void doImport() throws Exception {
-        InputSource in = new InputSource(new FileInputStream(mapsFilename));
+    public void doImport(String city) throws Exception {
+        InputSource in = new InputSource(new FileInputStream(mapsFilename+"_"+city));
         doImport(in);
     }
 
