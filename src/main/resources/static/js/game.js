@@ -81,8 +81,25 @@ var Enemy = new Phaser.Class({
 
             if (this.follower.t >= 1)
             {
-                this.setActive(false);
-                this.setVisible(false);
+                console.log ("enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
+
+                var foundNewPath = false;
+                for (var i = 0 ; i < paths.length; i++) {
+                    //console.log("Comparing existing="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" vs path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y);
+                    if ((paths[i].curves[0].p0.x == Math.round(this.follower.vec.x)) &&
+                        (paths[i].curves[0].p0.y == Math.round(this.follower.vec.y))) {
+                        console.log(this.pathNum+" found new path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" with speed "+paths[i].speed);
+                        this.pathNum = i;
+                        foundNewPath = true;
+                        this.follower.t = 0;
+                        continue;
+                    }
+                }
+
+                if (!foundNewPath) {
+                    this.setActive(false);
+                    this.setVisible(false);
+                }
             }
         },
 
@@ -227,14 +244,15 @@ function gotLocation(location) {
                 if (paths.length <= count) {
                     paths[count] = game.add.path(node.x, node.y);
                     paths[count].speed = way.maxSpeed;
+                    paths[count].name = way.name;
                 } else {
                     paths[count].lineTo(node.x, node.y);
                 }
 
             });
 
-            //graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt, 1);
-            graphics.lineStyle(2, 0xffffff, 1);
+            graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
+            //graphics.lineStyle(2, 0xffffff, 1);
             paths[count].draw(graphics);
             enemies = game.physics.add.group({ classType: Enemy, runChildUpdate: true });
 
