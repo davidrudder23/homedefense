@@ -23,15 +23,17 @@ var enemies;
 
 var game;
 
+var scoreText;
+
+var score = 0;
 
 var ENEMY_SPEED = 1/250000;
 
-var MAX_ENEMIES = 5;
+var MAX_ENEMIES = 8;
 
 var BULLET_DAMAGE = 50;
 
 function preload() {
-//    this.load.atlas('sprites', 'assets/spritesheet.png', 'assets/spritesheet.json');
     this.load.atlas('sprites', 'assets/handwriting_spritesheet.png', 'assets/handwriting_spritesheet.json');
     this.load.image('bullet', 'assets/bullet.png');
 }
@@ -40,9 +42,8 @@ var Enemy = new Phaser.Class({
 
         Extends: Phaser.GameObjects.Image,
         pathNum: 0,
-        initialize:
-
-        function Enemy (scene)
+        direction: 1,
+        initialize: function Enemy (scene)
         {
             Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'enemy');
 
@@ -59,6 +60,7 @@ var Enemy = new Phaser.Class({
             this.hp = 100;
 
             this.pathNum = getRandomInt(paths.length-1);
+            this.direction=1;
 
             paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
             
@@ -70,13 +72,15 @@ var Enemy = new Phaser.Class({
             // if hp drops below 0 we deactivate this enemy
             if(this.hp <= 0) {
                 this.setActive(false);
-                this.setVisible(false);      
+                this.setVisible(false);
+
+                addScore(10);
             }
         },
         update: function (time, delta)
         {
             var path = paths[this.pathNum];
-            this.follower.t += ENEMY_SPEED * delta * path.speed;
+            this.follower.t += this.direction * ENEMY_SPEED * delta * path.speed;
             path.getPoint(this.follower.t, this.follower.vec);
 
             this.setPosition(this.follower.vec.x, this.follower.vec.y);
@@ -97,10 +101,9 @@ var Enemy = new Phaser.Class({
                 }
 
                 if (!foundNewPath) {
-                    console.log (this.pathNum+" enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
+                    //console.log (this.pathNum+" enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
 
-                    this.setActive(false);
-                    this.setVisible(false);
+                    this.direction *= -1;
                 }
             }
         },
@@ -245,28 +248,51 @@ function create() {
     turrets = this.add.group({ classType: Turret, runChildUpdate: true });
 
     home = this.add.group({ classType: Home, runChildUpdate: true });
+    this.physics.add.overlap(enemies, home, damageHome);
 
     bullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
-
     this.physics.add.overlap(enemies, bullets, damageEnemy);
-
-    this.input.on('pointerdown', placeTurret);
 
     this.nextEnemy = 0;
 
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(gotLocation);
+        navigator.geolocation.getCurrentPosition(gotLocation, handleNoGeo);
     } else {
-        $("#debug").text("Geolocation is not supported by this browser.");
+        handleNoGeo();
     }
 }
 
+function handleNoGeo() {
+    $("#nogeo").show();
+}
+
+/*
+This function takes the response from the "no geo" select - which
+popular destination we want to defend - and passes it to the real
+function */
+function geoToDestination() {
+    var suppliedGeo = $("#newGeo").val();
+    var values = suppliedGeo.split("x");
+    var location={};
+    location.coords={};
+    location.coords.latitude=parseFloat(values[0]);
+    location.coords.longitude=parseFloat(values[1]);
+    gotLocation(location);
+}
+
 function gotLocation(location) {
+    if (!location) {
+        handleNoGeo();
+        return;
+    }
+
     var graphics = game.add.graphics();
 
     count = 0;
 
+    // create the geo bounding box. the aspect ratio appears to be off
+    // but, it appears to work ¯\_(ツ)_/¯
     var north = (location.coords.latitude + 0.0075).toFixed(4);
     var west = (location.coords.longitude - 0.0150).toFixed(4);
     var south = (location.coords.latitude - 0.0075).toFixed(4);
@@ -295,13 +321,20 @@ function gotLocation(location) {
 
             });
 
-            graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
-            //graphics.lineStyle(2, 0xffffff, 1);
+            //graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
+            graphics.lineStyle(2, 0xffffff, 1);
             paths[count].draw(graphics);
 
             count++;
         });
         placeHome();
+
+        scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
+
+        game.input.on('pointerdown', placeTurret);
+        game.input.on('pointerdown', function(pointer) {
+            console.log("pointer down");
+        });
     });
 
 
@@ -319,6 +352,14 @@ function damageEnemy(enemy, bullet) {
     }
 }
 
+function damageHome(enemy, home) {
+    // only if both enemy and bullet are alive
+    if (enemy.active === true) {
+        // Finish game
+        console.log("Home was hit!");
+    }
+}
+
 function update(time, delta) {
 
     // console.log("time="+time+", nextEnemy="+this.nextEnemy+" paths len="+paths.length);
@@ -327,7 +368,7 @@ function update(time, delta) {
         var numActiveEnemies = enemies.children.entries.filter(e=>e.active).length;
         if (numActiveEnemies<MAX_ENEMIES) {
             var enemy = enemies.get();
-            console.log("Making new enemy - "+enemy);
+            //console.log("Making new enemy - "+enemy);
             if (enemy)
             {
                 enemy.setInteractive(true);
@@ -336,7 +377,7 @@ function update(time, delta) {
                 enemy.setVisible(true);
                 enemy.startOnPath();
 
-                this.nextEnemy = time + 2000;
+                this.nextEnemy = time + 1000;
             }
         }
     }
@@ -362,7 +403,6 @@ function placeTurret(pointer) {
 }
 
 function placeHome(pointer) {
-    console.log("Place home");
     var house = home.get();
     if (house)
     {
@@ -378,4 +418,9 @@ function addBullet(x, y, angle) {
     {
         bullet.fire(x, y, angle);
     }
+}
+
+function addScore(amount) {
+    score += amount;
+    scoreText.setText("Score: "+score);
 }

@@ -1,18 +1,51 @@
 <html>
 <head>
     <title>HomeDefense</title>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="js/phaser.min.js"></script>
     <script src="js/game.js"></script>
     <script>
+
+        function isLoggedIn() {
+            $.get("/users
+        }
 
 
     </script>
 </head>
 <body>
+<div id="header">
+    HomeDefense is a Tower Defense Game where you defend your own home.  It's based on the geolocation in your browser and Open Street Maps to
+    build the paths the enemies travel.  It is very much a work in progress.
+</div>
+
+<div id="nogeo" style="display: none">
+    <p>
+    I'm sorry, we were not able to find your current locations?  How would you like to defend one of these great destinations?
+    </p>
+    <select id="newGeo" onchange="geoToDestination()">
+        <option>Choose a Great Destination!</option>
+        <option value="30.2746x-97.7404">Austin - Capital of Texas</option>
+        <option value="39.7392x-104.9874">Denver - Capital of Colorado</option>
+        <option value="40.7560x-73.9869">New York's Times Square</option>
+        <option value="42.3588x-71.0571">Boston's City Center</option>
+        <option value="51.5097x-0.1345">London's Piccadilly Circus</option>
+        <option value="48.8583x2.2945">Paris' Eiffel Tower</option>
+        <option value="35.6858x139.7538">Tokyo's City Center</option>
+        <option value="41.9137x12.5210">Rome's Bologna District</option>
+        <option value="48.1371x11.5757">Cologne's Marianneplatz</option>
+    </select>
+</div>
 <div id="content" style="display: block; width: 100%; text-align: center"></div>
 
-<div id="debug">
+<div id="debug" style="display: hidden">
+
+</div>
+
+<div id="credits">
+    <h3>Made with: </h3>
+    <img src="assets/Public-images-osm_logo.png" style="max-height: 48" title="Open Street Maps"/>
+    <img src="assets/phaser3.png" style="max-height: 48" title="Phaser 3"/>
 
 </div>
 

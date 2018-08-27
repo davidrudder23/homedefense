@@ -2,7 +2,9 @@ package org.noses.homedefense.maps;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import io.netty.handler.codec.compression.Bzip2Decoder;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.cassandra.core.CassandraOperations;
@@ -41,7 +43,21 @@ public class MapsImporter extends DefaultHandler {
     private List<WayNode> wayNodes;
 
     public void doImport(String city) throws Exception {
-        InputSource in = new InputSource(new FileInputStream(mapsFilename+"_"+city));
+        log.info("loading {} into cassandra", mapsFilename+city);
+        InputSource in;
+        if (city.startsWith("planet")) {
+            // the planet is freakin' huge.  Just ask Jules Verne.  It comes compressed and
+            // we're keeping it that way.  TBH, reading the file is the least time consuming
+            // part of this process, so adding 10% to the time is no big deal]
+            if (city.endsWith("bz2")) {
+                log.info("Is a bz2");
+                in = new InputSource(new BZip2CompressorInputStream(new FileInputStream(mapsFilename+city), true));
+            } else {
+                in = new InputSource(new FileInputStream(mapsFilename+city));
+            }
+        } else {
+            in = new InputSource(new FileInputStream(mapsFilename+"map_" + city));
+        }
         doImport(in);
     }
 
@@ -77,7 +93,7 @@ public class MapsImporter extends DefaultHandler {
         level++;
         log.debug("start element qName={} level={}", qName, level);
 
-        if (qName.equalsIgnoreCase("node") && (1==2)) {
+        if (qName.equalsIgnoreCase("node") && (1==1)) {
             Node node = new Node();
             node.getPoint().setId(parseLong(attributes.getValue("id")));
             node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
