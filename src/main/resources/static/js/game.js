@@ -21,7 +21,7 @@ var turrets;
 var home;
 var enemies;
 
-var game;
+var globals = {};
 
 var scoreText;
 
@@ -59,12 +59,19 @@ var Enemy = new Phaser.Class({
             this.follower.t = 0;
             this.hp = 100;
 
-            this.pathNum = getRandomInt(paths.length-1);
-            this.direction=1;
+            var availablePathNums = [];
+            for (var i = 0; i < paths.length; i++) {
+                if (paths[i].startPoint.x<0 || paths[i].startPoint.y<0) {
+                    availablePathNums[availablePathNums.length] = i;
+                }
+            }
 
+            this.pathNum = availablePathNums[getRandomInt(availablePathNums.length-1)];
+            this.direction=1;
             paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
-            
-            this.setPosition(this.follower.vec.x, this.follower.vec.y);            
+
+            this.setPosition(this.follower.vec.x, this.follower.vec.y);
+            $("#messages").text("An enemy is coming on "+paths[this.pathNum].name+"!!");
         },
         receiveDamage: function(damage) {
             this.hp -= damage;           
@@ -238,10 +245,10 @@ var Bullet = new Phaser.Class({
  
 function create() {
 
-    game.add = this.add;
-    game.physics = this.physics;
-    game.input = this.input;
-    game.physics = this.physics;
+    globals.add = this.add;
+    globals.physics = this.physics;
+    globals.input = this.input;
+    globals.physics = this.physics;
 
     enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
 
@@ -287,7 +294,7 @@ function gotLocation(location) {
         return;
     }
 
-    var graphics = game.add.graphics();
+    var graphics = globals.add.graphics();
 
     count = 0;
 
@@ -312,7 +319,7 @@ function gotLocation(location) {
         $.each(data.ways, function(index, way) {
             $.each(way.nodes, function(index, node) {
                 if (paths.length <= count) {
-                    paths[count] = game.add.path(node.x, node.y);
+                    paths[count] = globals.add.path(node.x, node.y);
                     paths[count].speed = way.maxSpeed;
                     paths[count].name = way.name;
                 } else {
@@ -329,10 +336,10 @@ function gotLocation(location) {
         });
         placeHome();
 
-        scoreText = game.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
+        scoreText = globals.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
 
-        game.input.on('pointerdown', placeTurret);
-        game.input.on('pointerdown', function(pointer) {
+        globals.input.on('pointerdown', placeTurret);
+        globals.input.on('pointerdown', function(pointer) {
             console.log("pointer down");
         });
     });
@@ -371,7 +378,7 @@ function update(time, delta) {
             //console.log("Making new enemy - "+enemy);
             if (enemy)
             {
-                enemy.setInteractive(true);
+                //enemy.setInteractive(true);
                 enemy.on("pointerdown", function(pointer) { console.log("enemy pointer down")}, this);
                 enemy.setActive(true);
                 enemy.setVisible(true);
