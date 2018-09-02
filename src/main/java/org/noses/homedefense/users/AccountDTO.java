@@ -11,7 +11,7 @@ public class AccountDTO {
 
     public static AccountDTO get(Account account) {
         AccountDTO accountDTO = new AccountDTO();
-        accountDTO.setEmail(account.getAccountPrimaryKey().getEmail());
+        accountDTO.setEmail(account.getEmail());
         accountDTO.setUsername(account.getAccountPrimaryKey().getUsername());
 
         return accountDTO;

@@ -20,7 +20,7 @@ public class AccountRepository {
 
     public AccountRepository() {
         Cluster cluster = Cluster.builder().addContactPoints("localhost").build();
-        Session session = cluster.connect("session");
+        Session session = cluster.connect("maps");
 
         template = new CassandraTemplate(session);
 
@@ -35,14 +35,15 @@ public class AccountRepository {
     }
 
     public void save(Account account) {
+        account.getAccountPrimaryKey().setPartitionId(Account.getPartitionIdByUsername(account.getAccountPrimaryKey().getUsername()));
         template.insert(account, insertOptions);
 
     }
 
     public Account getAccountBySessionToken(String sessionToken) {
-        Select select = QueryBuilder.select().from("account_session")
+        Select select = QueryBuilder.select().from("accountsession")
                 .where(QueryBuilder.eq("partition_id", AccountSession.getPartitionIdFromToken(sessionToken)))
-                .and(QueryBuilder.eq("token", sessionToken))
+                .and(QueryBuilder.eq("authenticationtoken", sessionToken))
                 .limit(1);
         List<AccountSession> sessions = template.select(select, AccountSession.class);
         if ((sessions == null) || (sessions.size()==0)) {
@@ -50,7 +51,7 @@ public class AccountRepository {
         }
         AccountSession session = sessions.get(0);
 
-        select = QueryBuilder.select().from("account_session")
+        select = QueryBuilder.select().from("account")
                 .where(QueryBuilder.eq("partition_id", session.getAccountPartitionId()))
                 .and(QueryBuilder.eq("username", session.getUsername()))
                 .limit(1);

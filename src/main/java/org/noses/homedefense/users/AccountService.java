@@ -1,14 +1,16 @@
 package org.noses.homedefense.users;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.buf.HexUtils;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 @Component
+@Slf4j
 public class AccountService {
     @Autowired
     AccountRepository accountRepository;
@@ -17,34 +19,56 @@ public class AccountService {
 
     public AccountDTO getAccountByToken(String token) {
         Account account = accountRepository.getAccountBySessionToken(token);
+        if (account == null) {
+            return null;
+        }
         AccountDTO accountDTO = AccountDTO.get(account);
 
         accountDTO.setToken(token);
         return accountDTO;
     }
 
-    public AccountDTO register(RegisterDTO registerDTO) throws RegistrationException {
+    public AccountDTO login(LoginDTO loginDTO) throws RESTException {
+        if (loginDTO == null) {
+            throw new RESTException(400, "No login provided");
+        }
+
+        if (loginDTO.getUsername() == null) {
+            throw new RESTException(400, "No username provided");
+        }
+
+        Account account = accountRepository.getAccountByUsername(loginDTO.getUsername());
+
+        if ((account == null) || (!checkPassword(loginDTO.getPassword(), account.getHashedPassword()))) {
+            // TODO: try login
+            throw new RESTException(401, "Password doesn't match");
+        }
+        
+        return registerNewSession(account);
+    }
+
+    public AccountDTO register(RegisterDTO registerDTO) throws RESTException {
         if (registerDTO == null) {
-            throw new RegistrationException(400, "No registration provided");
+            throw new RESTException(400, "No registration provided");
         }
 
         if (registerDTO.getUsername() == null) {
-            throw new RegistrationException(400, "No username provided");
+            throw new RESTException(400, "No username provided");
         }
 
         if (registerDTO.getUsername().length() < 4) {
-            throw new RegistrationException(400, "Username is too short");
+            throw new RESTException(400, "Username is too short");
         }
 
         Account account = accountRepository.getAccountByUsername(registerDTO.getUsername());
         if (account != null) {
             // TODO: try login
-            throw new RegistrationException(400, "Username already taken");
+            throw new RESTException(400, "Username already taken");
         }
 
         account = new Account();
         account.getAccountPrimaryKey().setUsername(registerDTO.getUsername());
-        account.getAccountPrimaryKey().setEmail(registerDTO.getEmail());
+        account.setEmail(registerDTO.getEmail());
         account.setHashedPassword(hashPassword(registerDTO.getPassword()));
 
         accountRepository.save(account);
@@ -53,15 +77,7 @@ public class AccountService {
     }
 
     public AccountDTO registerNewSession(Account account) {
-        String sessionToken = generateSessionToken();
-        AccountSession accountSession = new AccountSession();
-        accountSession.setAccountPartitionId(account.getAccountPrimaryKey().getPartitionId());
-        accountSession.getToken().setPartitionId(AccountSession.getPartitionIdFromToken(sessionToken));
-        accountSession.getToken().setToken(sessionToken);
-        accountSession.setUsername(account.getAccountPrimaryKey().getUsername());
-        accountSession.setEmail(account.getAccountPrimaryKey().getEmail());
-
-        accountRepository.save(accountSession);
+        String sessionToken = generateSessionToken(account);
 
         AccountDTO accountDTO = AccountDTO.get(account);
         accountDTO.setToken(sessionToken);
@@ -69,23 +85,37 @@ public class AccountService {
         return accountDTO;
     }
 
-    private String generateSessionToken() {
-        if (secureRandom == null) {
-            try {
-                secureRandom = SecureRandom.getInstanceStrong();
-            } catch (NoSuchAlgorithmException e) {
-                return null;
-            }
-        }
-
+    private String generateSessionToken(Account account) {
         byte[] tokenBytes = new byte[20];
 
-        secureRandom.nextBytes(tokenBytes);
-        return new String(Hex.encode(tokenBytes));
+        getSecureRandom().nextBytes(tokenBytes);
+        String sessionToken = new String(HexUtils.toHexString(tokenBytes));
+
+        AccountSession accountSession = new AccountSession();
+        accountSession.setAccountPartitionId(account.getAccountPrimaryKey().getPartitionId());
+        accountSession.getAuthenticationToken().setPartitionId(AccountSession.getPartitionIdFromToken(sessionToken));
+        accountSession.getAuthenticationToken().setAuthenticationToken(sessionToken);
+        accountSession.setUsername(account.getAccountPrimaryKey().getUsername());
+        accountSession.setEmail(account.getEmail());
+
+        accountRepository.save(accountSession);
+        return sessionToken;
     }
 
-    private String hashPassword (String password) {
-        BCryptPasswordEncoder bCrypt = new BCryptPasswordEncoder(20);
-        return bCrypt.encode(password);
+    private SecureRandom getSecureRandom() {
+        if (secureRandom == null) {
+            log.info("Generating new secure random");
+            secureRandom = new SecureRandom();
+        }
+
+        return secureRandom;
+    }
+
+    private String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt(5, getSecureRandom()));
+    }
+
+    private boolean checkPassword(String password, String hashedPassword) {
+        return BCrypt.checkpw(password, hashedPassword);
     }
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegistrationException extends Exception {
+public class RESTException extends Exception {
 
     private int statusCode;
     private String message;

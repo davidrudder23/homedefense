@@ -11,8 +11,11 @@ import org.springframework.data.cassandra.core.mapping.Table;
 @Data
 public class AccountSession {
 
+    public AccountSession() {
+        authenticationToken = new AccountSessionKey();
+    }
     @PrimaryKey
-    private AccountSessionKey token;
+    private AccountSessionKey authenticationToken;
 
     private String accountPartitionId;
 
@@ -32,6 +35,6 @@ class AccountSessionKey {
     @PrimaryKeyColumn(name = "partition_id", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private String partitionId;
 
-    @PrimaryKeyColumn(name = "token", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private String token;
+    @PrimaryKeyColumn(name = "authenticationtoken", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
+    private String authenticationToken;
 }

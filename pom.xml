@@ -59,10 +59,11 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-core -->
+        <!-- https://mvnrepository.com/artifact/org.mindrot/jbcrypt -->
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-core</artifactId>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.3m</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-compress -->

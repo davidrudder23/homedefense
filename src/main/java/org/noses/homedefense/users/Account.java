@@ -13,6 +13,10 @@ import java.math.BigInteger;
 @Data
 public class Account
 {
+
+    public Account() {
+        accountPrimaryKey = new AccountPrimaryKey();
+    }
     @PrimaryKey
     private AccountPrimaryKey accountPrimaryKey;
 
@@ -23,6 +27,8 @@ public class Account
     private float homeLatitude;
 
     private String hashedPassword;
+
+    private String email;
 
     public static String getPartitionIdByUsername(String username) {
         return username.substring(username.length()-4);
@@ -38,8 +44,5 @@ class AccountPrimaryKey {
 
     @PrimaryKeyColumn(name = "username", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
     private String username;
-
-    @PrimaryKeyColumn(name = "email", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private String email;
 
 }
