@@ -2,7 +2,7 @@ var config = {
     type: Phaser.AUTO,
     parent: 'content',
     width: 640,
-    height: 512,
+    height: 480,
     physics: {
         default: 'arcade'
     },
@@ -29,7 +29,7 @@ var score = 0;
 
 var ENEMY_SPEED = 1/250000;
 
-var MAX_ENEMIES = 8;
+var MAX_ENEMIES = 3;
 
 var BULLET_DAMAGE = 50;
 
@@ -38,84 +38,6 @@ function preload() {
     this.load.image('bullet', 'assets/bullet.png');
 }
 
-var Enemy = new Phaser.Class({
-
-        Extends: Phaser.GameObjects.Image,
-        pathNum: 0,
-        direction: 1,
-        initialize: function Enemy (scene)
-        {
-            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'enemy');
-
-            this.follower = { t: 0, vec: new Phaser.Math.Vector2() };
-            this.hp = 0;
-        },
-
-        startOnPath: function ()
-        {
-            if (paths.length<=0) {
-                return;
-            }
-            this.follower.t = 0;
-            this.hp = 100;
-
-            var availablePathNums = [];
-            for (var i = 0; i < paths.length; i++) {
-                if (paths[i].startPoint.x<0 || paths[i].startPoint.y<0) {
-                    availablePathNums[availablePathNums.length] = i;
-                }
-            }
-
-            this.pathNum = availablePathNums[getRandomInt(availablePathNums.length-1)];
-            this.direction=1;
-            paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
-
-            this.setPosition(this.follower.vec.x, this.follower.vec.y);
-            $("#messages").text("An enemy is coming on "+paths[this.pathNum].name+"!!");
-        },
-        receiveDamage: function(damage) {
-            this.hp -= damage;           
-            
-            // if hp drops below 0 we deactivate this enemy
-            if(this.hp <= 0) {
-                this.setActive(false);
-                this.setVisible(false);
-
-                addScore(10);
-            }
-        },
-        update: function (time, delta)
-        {
-            var path = paths[this.pathNum];
-            this.follower.t += this.direction * ENEMY_SPEED * delta * path.speed;
-            path.getPoint(this.follower.t, this.follower.vec);
-
-            this.setPosition(this.follower.vec.x, this.follower.vec.y);
-
-            if (this.follower.t >= 1)
-            {
-                var foundNewPath = false;
-                for (var i = 0 ; i < paths.length; i++) {
-                    //console.log("Comparing existing="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" vs path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y);
-                    if ((paths[i].curves[0].p0.x == Math.round(this.follower.vec.x)) &&
-                        (paths[i].curves[0].p0.y == Math.round(this.follower.vec.y))) {
-                        //console.log(this.pathNum+" found new path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" with speed "+paths[i].speed);
-                        this.pathNum = i;
-                        foundNewPath = true;
-                        this.follower.t = 0;
-                        continue;
-                    }
-                }
-
-                if (!foundNewPath) {
-                    //console.log (this.pathNum+" enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
-
-                    this.direction *= -1;
-                }
-            }
-        },
-
-});
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
@@ -142,8 +64,8 @@ var Turret = new Phaser.Class({
             this.nextTic = 0;
         },
         place: function(i, j) {            
-            this.y = i * 64 + 64/2;
-            this.x = j * 64 + 64/2;
+            this.x = i;
+            this.y = j;
         },
         fire: function() {
             var enemy = getEnemy(this.x, this.y, 200);
@@ -322,19 +244,23 @@ function gotLocation(location) {
                     paths[count] = globals.add.path(node.x, node.y);
                     paths[count].speed = way.maxSpeed;
                     paths[count].name = way.name;
+                    paths[count].intersections=[];
                 } else {
                     paths[count].lineTo(node.x, node.y);
                 }
 
+
             });
 
-            //graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
-            graphics.lineStyle(2, 0xffffff, 1);
+            graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
+            //graphics.lineStyle(2, 0xffffff, 1);
             paths[count].draw(graphics);
 
             count++;
         });
-        placeHome();
+        //placeHome();
+
+        setupIntersections();
 
         scoreText = globals.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
 
@@ -342,9 +268,40 @@ function gotLocation(location) {
         globals.input.on('pointerdown', function(pointer) {
             console.log("pointer down");
         });
+
     });
 
 
+}
+
+function setupIntersections() {
+    for (var i = 0; i < paths.length; i++) {
+        for (var j = 0; j < paths[i].curves.length; j++) {
+            for (var x = 0; x < paths.length; x++) {
+                if (i != x) {
+                    for (var y = 0; y < paths[x].curves.length; y++) {
+
+                        if (paths[i].name=="Broadway") {
+                        console.log("Comparing "+paths[i].name+": "+paths[i].curves[j].p0.x+","+paths[i].curves[j].p0.y
+                        +" to "+paths[x].name+": "+paths[x].curves[y].p0.x+","+paths[x].curves[y].p0.y);
+                        }
+                        if ((Math.abs(paths[i].curves[j].p0.x - paths[x].curves[y].p0.x) < 5) &&
+                            (Math.abs(paths[i].curves[j].p0.y - paths[x].curves[y].p0.y) < 5)) {
+                            console.log("Match");
+                            //console.log(paths[i].name+" intersects with "+paths[x].name);
+                            //placeDebugTurret(paths[i].curves[j].p0.x, paths[i].curves[j].p0.y);
+                            paths[i].intersections[paths[i].intersections.length] = {
+                                x: paths[i].curves[j].p0.x,
+                                y: paths[i].curves[j].p0.y,
+                                pathNum: i,
+                                name: paths[x].name
+                            };
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 function damageEnemy(enemy, bullet) {  
@@ -396,8 +353,8 @@ function canPlaceTurret(i, j) {
 
 function placeTurret(pointer) {
     console.log("Place turret");
-    var i = Math.floor(pointer.y/64);
-    var j = Math.floor(pointer.x/64);
+    var i = pointer.y;
+    var j = pointer.x;
     if(canPlaceTurret(i, j)) {
         var turret = turrets.get();
         if (turret)
@@ -405,7 +362,8 @@ function placeTurret(pointer) {
             turret.setActive(true);
             turret.setVisible(true);
             turret.place(i, j);
-        }   
+        console.log("turret placed at "+i+","+j);
+        }
     }
 }
 
@@ -416,6 +374,16 @@ function placeHome(pointer) {
         house.setActive(true);
         house.setVisible(true);
         house.place(320, 240);
+    }
+}
+
+function placeDebugTurret(x, y) {
+    var turret = turrets.get();
+    if (turret) {
+        turret.setActive(true);
+        turret.setVisible(true);
+        turret.place(x,y);
+        console.log("turret placed at "+x+","+y);
     }
 }
 
