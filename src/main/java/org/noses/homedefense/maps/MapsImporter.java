@@ -43,20 +43,13 @@ public class MapsImporter extends DefaultHandler {
     private List<WayNode> wayNodes;
 
     public void doImport(String city) throws Exception {
-        log.info("loading {} into cassandra", mapsFilename+city);
+        log.info("loading {} into cassandra", mapsFilename + city);
         InputSource in;
-        if (city.startsWith("planet")) {
-            // the planet is freakin' huge.  Just ask Jules Verne.  It comes compressed and
-            // we're keeping it that way.  TBH, reading the file is the least time consuming
-            // part of this process, so adding 10% to the time is no big deal]
-            if (city.endsWith("bz2")) {
-                log.info("Is a bz2");
-                in = new InputSource(new BZip2CompressorInputStream(new FileInputStream(mapsFilename+city), true));
-            } else {
-                in = new InputSource(new FileInputStream(mapsFilename+city));
-            }
+        if (city.endsWith("bz2")) {
+            log.info("Is a bz2");
+            in = new InputSource(new BZip2CompressorInputStream(new FileInputStream(mapsFilename + city), true));
         } else {
-            in = new InputSource(new FileInputStream(mapsFilename+"map_" + city));
+            in = new InputSource(new FileInputStream(mapsFilename + city));
         }
         doImport(in);
     }
@@ -93,7 +86,7 @@ public class MapsImporter extends DefaultHandler {
         level++;
         log.debug("start element qName={} level={}", qName, level);
 
-        if (qName.equalsIgnoreCase("node") && (1==1)) {
+        if (qName.equalsIgnoreCase("node") && (1 == 1)) {
             Node node = new Node();
             node.getPoint().setId(parseLong(attributes.getValue("id")));
             node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
@@ -117,7 +110,7 @@ public class MapsImporter extends DefaultHandler {
 
             wayNodes = new ArrayList<>();
 
-                //way.setName(attributes.getValue("way"));
+            //way.setName(attributes.getValue("way"));
         } else if (qName.equalsIgnoreCase("nd")) {  // waynode
             if (way != null) {
                 WayNode wayNode = new WayNode();
@@ -161,18 +154,18 @@ public class MapsImporter extends DefaultHandler {
         if (qName.equalsIgnoreCase("way")) {
             if ((way.getHighway() != null) &&
                     (("trunk".equalsIgnoreCase(way.getHighway())) ||
-                    ("primary".equalsIgnoreCase(way.getHighway())) ||
-                    ("secondary".equalsIgnoreCase(way.getHighway())) ||
-                    ("tertiary".equalsIgnoreCase(way.getHighway())) ||
-                    ("residential".equalsIgnoreCase(way.getHighway())) ||
-                    ("road".equalsIgnoreCase(way.getHighway())) ||
-                    ("motorway".equalsIgnoreCase(way.getHighway())))) {
+                            ("primary".equalsIgnoreCase(way.getHighway())) ||
+                            ("secondary".equalsIgnoreCase(way.getHighway())) ||
+                            ("tertiary".equalsIgnoreCase(way.getHighway())) ||
+                            ("residential".equalsIgnoreCase(way.getHighway())) ||
+                            ("road".equalsIgnoreCase(way.getHighway())) ||
+                            ("motorway".equalsIgnoreCase(way.getHighway())))) {
 
                 // TODO: don't insert ways. They're not technically necessary, but in for
                 // debugging purposes
-                mapsRepository.insertWay(way);
+                //mapsRepository.insertWay(way);
 
-                for (WayNode wayNode: wayNodes) {
+                for (WayNode wayNode : wayNodes) {
                     Node node = mapsRepository.getNode(wayNode.getNode());
                     wayNode.getWayNodeKey().setLat(node.getPoint().getLat());
                     wayNode.getWayNodeKey().setLon(node.getPoint().getLon());
