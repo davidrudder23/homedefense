@@ -16,6 +16,11 @@ var config = {
 
 var game = new Phaser.Game(config);
 
+var currentNorth = 0;
+var currentSouth = 0;
+var currentEast = 0;
+var currentWest = 0;
+
 var paths = [];
 var turrets;
 var home;
@@ -265,6 +270,7 @@ function create() {
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(gotLocation, handleNoGeo);
+        //navigator.geolocation.watchPosition(gotLocation);
     } else {
         handleNoGeo();
     }
@@ -304,6 +310,14 @@ function gotLocation(location) {
     var west = (location.coords.longitude - 0.0150).toFixed(4);
     var south = (location.coords.latitude - 0.0075).toFixed(4);
     var east = (location.coords.longitude + 0.0150).toFixed(4);
+    if ((currentNorth == north) &&
+        (currentWest == west) &&
+        (currentSouth == south) &&
+        (currentEast == east)) {
+        console.log("No change in geo");
+        return;
+    }
+
     console.log("north="+north);
     console.log("west="+west);
     console.log("south="+south);
