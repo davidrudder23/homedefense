@@ -187,6 +187,7 @@ function create() {
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(gotLocation, handleNoGeo);
+        navigator.geolocation.watchPosition(gotLocation);
     } else {
         handleNoGeo();
     }
@@ -285,6 +286,14 @@ function setupIntersections() {
                         console.log("Comparing "+paths[i].name+": "+paths[i].curves[j].p0.x+","+paths[i].curves[j].p0.y
                         +" to "+paths[x].name+": "+paths[x].curves[y].p0.x+","+paths[x].curves[y].p0.y);
                         }
+
+                        var slopeI = (Math.abs(paths[i].curves[j].p1.y-Math.abs(paths[i].curves[j].p0.y)/(Math.abs(paths[i].curves[j].p1.x)/Math.abs(paths[i].curves[j].p0.x);
+                        var slopeX = (Math.abs(paths[x].curves[y].p1.y-Math.abs(paths[x].curves[y].p0.y)/(Math.abs(paths[x].curves[y].p1.x)/Math.abs(paths[x].curves[y].p0.x);
+
+                        if (slopeI!=slopeX) {
+
+                        }
+
                         if ((Math.abs(paths[i].curves[j].p0.x - paths[x].curves[y].p0.x) < 5) &&
                             (Math.abs(paths[i].curves[j].p0.y - paths[x].curves[y].p0.y) < 5)) {
                             console.log("Match");
