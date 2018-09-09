@@ -24,7 +24,6 @@ function checkLoggedIn() {
 }
 
 function checkAuthnResponse(data) {
-console.log(data);
 
     if ((!data) || (!data.token)) {
         window.location="login.html";
