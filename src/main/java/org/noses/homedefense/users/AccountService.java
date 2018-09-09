@@ -5,6 +5,7 @@ import org.apache.tomcat.util.buf.HexUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -45,6 +46,19 @@ public class AccountService {
         }
         
         return registerNewSession(account);
+    }
+
+    public void updateAccount(AccountDTO accountDTO) {
+        Account account = accountRepository.getAccountByUsername(accountDTO.getUsername());
+
+        account.setHomeLatitude(accountDTO.getHomeLatitude());
+        account.setHomeLongitude(accountDTO.getHomeLongitude());
+
+        if (!StringUtils.isEmpty(accountDTO.getEmail())) {
+            account.setEmail(accountDTO.getEmail());
+        }
+
+        accountRepository.save(account);
     }
 
     public AccountDTO register(RegisterDTO registerDTO) throws RESTException {

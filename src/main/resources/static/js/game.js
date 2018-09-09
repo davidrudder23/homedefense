@@ -249,6 +249,12 @@ var Bullet = new Phaser.Class({
 
  
 function create() {
+    // bomb if no session, but this should have already been taken care of
+    var sessionToken = localStorage.getItem("sessionToken");
+    if (!sessionToken) {
+        window.location="login.html";
+        return;
+    }
 
     globals.add = this.add;
     globals.physics = this.physics;
@@ -268,96 +274,42 @@ function create() {
 
     this.nextEnemy = 0;
 
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(gotLocation, handleNoGeo);
-        //navigator.geolocation.watchPosition(gotLocation);
-    } else {
-        handleNoGeo();
-    }
-}
-
-function handleNoGeo() {
-    $("#nogeo").show();
-}
-
-/*
-This function takes the response from the "no geo" select - which
-popular destination we want to defend - and passes it to the real
-function */
-function geoToDestination() {
-    var suppliedGeo = $("#newGeo").val();
-    var values = suppliedGeo.split("x");
-    var location={};
-    location.coords={};
-    location.coords.latitude=parseFloat(values[0]);
-    location.coords.longitude=parseFloat(values[1]);
-    gotLocation(location);
-}
-
-function gotLocation(location) {
-    if (!location) {
-        handleNoGeo();
-        return;
-    }
-
     var graphics = globals.add.graphics();
 
     count = 0;
 
-    // create the geo bounding box. the aspect ratio appears to be off
-    // but, it appears to work ¯\_(ツ)_/¯
-    var north = (location.coords.latitude + 0.0075).toFixed(4);
-    var west = (location.coords.longitude - 0.0150).toFixed(4);
-    var south = (location.coords.latitude - 0.0075).toFixed(4);
-    var east = (location.coords.longitude + 0.0150).toFixed(4);
-    if ((currentNorth == north) &&
-        (currentWest == west) &&
-        (currentSouth == south) &&
-        (currentEast == east)) {
-        console.log("No change in geo");
-        return;
-    }
+    $.ajax({
+        type: "GET",
+        url: "/maps/640/480",
+        headers: {
+            "X-Authorization-Token": sessionToken
+        },
+        success: function(data) {
+            $.each(data.ways, function(index, way) {
+                $.each(way.nodes, function(index, node) {
+                    if (paths.length <= count) {
+                        paths[count] = globals.add.path(node.x, node.y);
+                        paths[count].speed = way.maxSpeed;
+                        paths[count].name = way.name;
+                    } else {
+                        paths[count].lineTo(node.x, node.y);
+                    }
 
-    console.log("north="+north);
-    console.log("west="+west);
-    console.log("south="+south);
-    console.log("east="+east);
+                });
 
+                //graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
+                graphics.lineStyle(2, 0xffffff, 1);
+                paths[count].draw(graphics);
 
-    $.get("/maps/640/480/"
-        +north+"/"
-        +west+"/"
-        +south+"/"
-        +east,
-        function(data) {
-        $.each(data.ways, function(index, way) {
-            $.each(way.nodes, function(index, node) {
-                if (paths.length <= count) {
-                    paths[count] = globals.add.path(node.x, node.y);
-                    paths[count].speed = way.maxSpeed;
-                    paths[count].name = way.name;
-                } else {
-                    paths[count].lineTo(node.x, node.y);
-                }
-
+                count++;
             });
+            placeHome();
 
-            //graphics.lineStyle(2, getRandomInt(256)*getRandomInt(256)*getRandomInt(256), 1);
-            graphics.lineStyle(2, 0xffffff, 1);
-            paths[count].draw(graphics);
+            scoreText = globals.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
 
-            count++;
-        });
-        placeHome();
-
-        scoreText = globals.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
-
-        globals.input.on('pointerdown', placeTurret);
-        globals.input.on('pointerdown', function(pointer) {
-            console.log("pointer down");
-        });
+            globals.input.on('pointerdown', placeTurret);
+         }
     });
-
 
 }
 

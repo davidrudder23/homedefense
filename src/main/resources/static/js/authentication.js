@@ -7,7 +7,7 @@ function login() {
 
 function checkLoggedIn () {
     var sessionToken = localStorage.getItem("sessionToken");
-    console.log(sessionToken);
+
     if (!sessionToken) {
         window.location="login.html";
     }
@@ -25,6 +25,13 @@ function checkLoggedIn () {
 function checkAuthnResponse(data) {
 
     if ((!data) || (!data.token)) {
-            window.location="login.html";
+        window.location="login.html";
+        return;
     }
+
+    if ((!data.homeLatitude) || (!data.homeLongitude)) {
+        window.location="home.html";
+        return;
+    }
+
 }

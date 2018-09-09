@@ -16,7 +16,7 @@ public class AccountResource {
     AccountService accountService;
 
     @GET
-    @RequestMapping("/user")
+    @RequestMapping(value="/user", method=RequestMethod.GET)
     public ResponseEntity<AccountDTO> getCurrentUser(@RequestHeader("X-Authorization-Token") String authorizationToken) {
         if (StringUtils.isEmpty(authorizationToken)) {
             new ResponseEntity<String>("unauthorized", HttpStatus.UNAUTHORIZED);
@@ -30,7 +30,24 @@ public class AccountResource {
     }
 
     @POST
-    @RequestMapping("/register")
+    @RequestMapping(value="/user", method=RequestMethod.POST)
+    public ResponseEntity<AccountDTO> setUserInfo(@RequestHeader("X-Authorization-Token") String authorizationToken,
+                                                  @RequestBody AccountDTO accountDTO) {
+        if (StringUtils.isEmpty(authorizationToken)) {
+            new ResponseEntity<String>("unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+        AccountDTO existingDTO = accountService.getAccountByToken(authorizationToken);
+        if (existingDTO == null) {
+            return new ResponseEntity<AccountDTO>(new AccountDTO(), HttpStatus.UNAUTHORIZED);
+        }
+
+        accountService.updateAccount(accountDTO);
+
+        return new ResponseEntity<AccountDTO>(accountDTO, HttpStatus.OK);
+    }
+
+    @POST
+    @RequestMapping(value="/register", method=RequestMethod.POST)
     public ResponseEntity<AccountDTO> register(@RequestBody RegisterDTO registerDTO) {
 
         try {
@@ -42,7 +59,7 @@ public class AccountResource {
     }
 
     @POST
-    @RequestMapping("/login")
+    @RequestMapping(value="/login", method=RequestMethod.POST)
     public ResponseEntity<AccountDTO> login(@RequestBody LoginDTO loginDTO) {
 
         try {

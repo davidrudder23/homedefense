@@ -34,13 +34,9 @@ public class MapsResource {
     }
 
     @GET
-    @RequestMapping("/{width}/{height}/{north}/{west}/{south}/{east}")
+    @RequestMapping("/{width}/{height}")
     public ResponseEntity<MapDTO> getMap(@RequestHeader("X-Authorization-Token") String authorizationToken, @PathVariable("width") int width,
-                       @PathVariable("height") int height,
-                       @PathVariable("north") Float north,
-                       @PathVariable("west") Float west,
-                       @PathVariable("south") Float south,
-                       @PathVariable("east") Float east) {
+                       @PathVariable("height") int height) {
 
         if (StringUtils.isEmpty(authorizationToken)) {
             new ResponseEntity<String>("unauthorized", HttpStatus.UNAUTHORIZED);
@@ -50,6 +46,11 @@ public class MapsResource {
         if (accountDTO == null) {
             return new ResponseEntity<MapDTO>(new MapDTO(), HttpStatus.UNAUTHORIZED);
         }
+
+        float north = (float)(accountDTO.getHomeLatitude()+0.0075);
+        float west = (float)(accountDTO.getHomeLongitude()-0.0150);
+        float south = (float)(accountDTO.getHomeLatitude()-0.0075);
+        float east = (float)(accountDTO.getHomeLongitude()+0.0150);
 
         return new ResponseEntity<MapDTO>(mapsReader.readMap(width, height, north, west, south, east), HttpStatus.OK);
     }

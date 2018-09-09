@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Set Your Home</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+
+        var latitude;
+        var longitude;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(gotLocation);
+        }
+
+        function gotLocation(position) {
+            console.log(position);
+            $("#useGeo").show();
+            latitude=position.coords.latitude;
+            longitude=position.coords.longitude;
+        }
+
+        function useGeo() {
+            setHomeAddress();
+        }
+
+        function useDestination() {
+            var suppliedGeo = $("#newGeo").val();
+            var values = suppliedGeo.split("x");
+            latitude=parseFloat(values[0]);
+            longitude=parseFloat(values[1]);
+            setHomeAddress();
+        }
+
+        function setHomeAddress() {
+
+            var accountDTO;
+
+            var sessionToken = localStorage.getItem("sessionToken");
+
+            if (!sessionToken) {
+                window.location="login.html";
+            }
+
+            $.ajax({
+                type: "GET",
+                url: "/users/user",
+                headers: {
+                    "X-Authorization-Token": sessionToken
+                }
+            }).then(function(account) {
+                account.homeLatitude=latitude;
+                account.homeLongitude=longitude;
+
+                console.log(account);
+
+                $.ajax({
+                    type: "POST",
+                    url: "/users/user",
+                    data: JSON.stringify(account),
+                    contentType:"application/json; charset=utf-8",
+                    dataType:"json",
+                    headers: {
+                        "X-Authorization-Token": sessionToken
+                    },
+                    success: function(data) {
+                        window.location="index.html";
+                    }
+                });
+            });
+        }
+
+
+    </script>
+
+</head>
+<body>
+
+<div>
+    <p id="useGeo" style="display: none">
+        <button onclick="useGeo()">Use your current location</button>
+    </p>
+    <select id="newGeo" onchange="useDestination()">
+        <option>Choose a Great Destination!</option>
+        <option value="30.2746x-97.7404">Austin - Capital of Texas</option>
+        <option value="39.7392x-104.9874">Denver - Capital of Colorado</option>
+        <option value="40.7560x-73.9869">New York's Times Square</option>
+        <option value="42.3588x-71.0571">Boston's City Center</option>
+        <option value="51.5097x-0.1345">London's Piccadilly Circus</option>
+        <option value="48.8583x2.2945">Paris' Eiffel Tower</option>
+        <option value="35.6858x139.7538">Tokyo's City Center</option>
+        <option value="41.9137x12.5210">Rome's Bologna District</option>
+        <option value="48.1371x11.5757">Cologne's Marianneplatz</option>
+    </select>
+</div>
+
+</body>
+</html>
