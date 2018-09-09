@@ -5,7 +5,7 @@ function login() {
 
 }
 
-function checkLoggedIn () {
+function checkLoggedIn() {
     var sessionToken = localStorage.getItem("sessionToken");
 
     if (!sessionToken) {
@@ -18,11 +18,13 @@ function checkLoggedIn () {
         headers: {
             "X-Authorization-Token": sessionToken
         },
-        success: checkAuthnResponse
+        success: checkAuthnResponse,
+        error: checkAuthnResponse
     });
 }
 
 function checkAuthnResponse(data) {
+console.log(data);
 
     if ((!data) || (!data.token)) {
         window.location="login.html";

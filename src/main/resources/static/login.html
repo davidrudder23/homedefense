@@ -45,7 +45,7 @@
         function checkRegistration(data) {
             if (data.token) {
                 localStorage.setItem("sessionToken", data.token);
-                window.location="index.html";
+                window.location="home.html";
             } else {
                 $("#messages").html("Registration failed");
             }
