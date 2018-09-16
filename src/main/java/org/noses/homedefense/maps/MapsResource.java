@@ -6,15 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("/maps")
@@ -23,18 +17,18 @@ public class MapsResource {
     MapsImporter mapsImporter;
 
     @Autowired
-    MapsReader mapsReader;
+    MapsService mapsService;
     @Autowired
     AccountService accountService;
 
     @GET
-    @RequestMapping("/import/{city}")
+    @RequestMapping(value="/import/{city}", method= RequestMethod.GET)
     public void doImport(@PathVariable("city") String city) throws Exception {
         mapsImporter.doImport(city);
     }
 
     @GET
-    @RequestMapping("/{width}/{height}")
+    @RequestMapping(value="/{width}/{height}", method= RequestMethod.GET)
     public ResponseEntity<MapDTO> getMap(@RequestHeader("X-Authorization-Token") String authorizationToken, @PathVariable("width") int width,
                        @PathVariable("height") int height) {
 
@@ -52,7 +46,7 @@ public class MapsResource {
         float south = (float)(accountDTO.getHomeLatitude()-0.0075);
         float east = (float)(accountDTO.getHomeLongitude()+0.0150);
 
-        return new ResponseEntity<MapDTO>(mapsReader.readMap(width, height, north, west, south, east), HttpStatus.OK);
+        return new ResponseEntity<MapDTO>(mapsService.readMap(width, height, north, west, south, east), HttpStatus.OK);
     }
 
 }

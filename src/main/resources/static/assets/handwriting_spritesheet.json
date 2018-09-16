@@ -62,7 +62,27 @@
         "w": 32,
         "h": 32
       }
-
+    },
+    {
+      "filename": "nest",
+      "frame": {
+        "x": 96,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 32,
+        "h": 32
+      },
+      "sourceSize": {
+        "w": 32,
+        "h": 32
+      }
     }
   ],
   "meta": {

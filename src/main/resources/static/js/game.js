@@ -24,7 +24,7 @@ var currentWest = 0;
 var paths = [];
 var turrets;
 var home;
-var enemies;
+var enemies, largeEnemies;
 
 var globals = {};
 
@@ -42,85 +42,6 @@ function preload() {
     this.load.atlas('sprites', 'assets/handwriting_spritesheet.png', 'assets/handwriting_spritesheet.json');
     this.load.image('bullet', 'assets/bullet.png');
 }
-
-var Enemy = new Phaser.Class({
-
-        Extends: Phaser.GameObjects.Image,
-        pathNum: 0,
-        direction: 1,
-        initialize: function Enemy (scene)
-        {
-            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'enemy');
-
-            this.follower = { t: 0, vec: new Phaser.Math.Vector2() };
-            this.hp = 0;
-        },
-
-        startOnPath: function ()
-        {
-            if (paths.length<=0) {
-                return;
-            }
-            this.follower.t = 0;
-            this.hp = 100;
-
-            var availablePathNums = [];
-            for (var i = 0; i < paths.length; i++) {
-                if (paths[i].startPoint.x<0 || paths[i].startPoint.y<0) {
-                    availablePathNums[availablePathNums.length] = i;
-                }
-            }
-
-            this.pathNum = availablePathNums[getRandomInt(availablePathNums.length-1)];
-            this.direction=1;
-            paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
-
-            this.setPosition(this.follower.vec.x, this.follower.vec.y);
-            $("#messages").text("An enemy is coming on "+paths[this.pathNum].name+"!!");
-        },
-        receiveDamage: function(damage) {
-            this.hp -= damage;           
-            
-            // if hp drops below 0 we deactivate this enemy
-            if(this.hp <= 0) {
-                this.setActive(false);
-                this.setVisible(false);
-
-                addScore(10);
-            }
-        },
-        update: function (time, delta)
-        {
-            var path = paths[this.pathNum];
-            this.follower.t += this.direction * ENEMY_SPEED * delta * path.speed;
-            path.getPoint(this.follower.t, this.follower.vec);
-
-            this.setPosition(this.follower.vec.x, this.follower.vec.y);
-
-            if (this.follower.t >= 1)
-            {
-                var foundNewPath = false;
-                for (var i = 0 ; i < paths.length; i++) {
-                    //console.log("Comparing existing="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" vs path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y);
-                    if ((paths[i].curves[0].p0.x == Math.round(this.follower.vec.x)) &&
-                        (paths[i].curves[0].p0.y == Math.round(this.follower.vec.y))) {
-                        //console.log(this.pathNum+" found new path["+i+"]="+paths[i].curves[0].p0.x+"x"+paths[i].curves[0].p0.y+" with speed "+paths[i].speed);
-                        this.pathNum = i;
-                        foundNewPath = true;
-                        this.follower.t = 0;
-                        continue;
-                    }
-                }
-
-                if (!foundNewPath) {
-                    //console.log (this.pathNum+" enemy ended at "+Math.round(this.follower.vec.x)+"x"+Math.round(this.follower.vec.y));
-
-                    this.direction *= -1;
-                }
-            }
-        },
-
-});
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
@@ -149,6 +70,38 @@ var Turret = new Phaser.Class({
         place: function(i, j) {            
             this.y = i * 64 + 64/2;
             this.x = j * 64 + 64/2;
+        },
+        fire: function() {
+            var enemy = getEnemy(this.x, this.y, 200);
+            if(enemy) {
+                var angle = Phaser.Math.Angle.Between(this.x, this.y, enemy.x, enemy.y);
+                addBullet(this.x, this.y, angle);
+                this.angle = (angle + Math.PI/2) * Phaser.Math.RAD_TO_DEG;
+            }
+        },
+        update: function (time, delta)
+        {
+            if(time > this.nextTic) {
+                this.fire();
+                this.nextTic = time + 1000;
+            }
+        }
+});
+
+var Nest = new Phaser.Class({
+
+        Extends: Phaser.GameObjects.Image,
+
+        initialize:
+
+        function Nest (scene)
+        {
+            Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'nest');
+            this.nextTic = 0;
+        },
+        place: function(x, y) {
+            this.x = x;
+            this.y = y;
         },
         fire: function() {
             var enemy = getEnemy(this.x, this.y, 200);
@@ -262,15 +215,18 @@ function create() {
     globals.physics = this.physics;
 
     enemies = this.physics.add.group({ classType: Enemy, runChildUpdate: true });
+    largeEnemies = this.physics.add.group({ classType: LargeEnemy, runChildUpdate: true });
 
     turrets = this.add.group({ classType: Turret, runChildUpdate: true });
 
     home = this.add.group({ classType: Home, runChildUpdate: true });
     this.physics.add.overlap(enemies, home, damageHome);
+    this.physics.add.overlap(largeEnemies, home, damageHome);
 
     bullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     this.physics.add.overlap(enemies, bullets, damageEnemy);
+    this.physics.add.overlap(largeEnemies, bullets, damageEnemy);
 
     this.nextEnemy = 0;
 
@@ -339,13 +295,20 @@ function update(time, delta) {
     if ((paths.length>0) && (time > this.nextEnemy))
     {
         var numActiveEnemies = enemies.children.entries.filter(e=>e.active).length;
-        if (numActiveEnemies<MAX_ENEMIES) {
-            var enemy = enemies.get();
+        var numActiveLargeEnemies = largeEnemies.children.entries.filter(e=>e.active).length;
+        if ((numActiveEnemies+numActiveLargeEnemies)<MAX_ENEMIES) {
+            var enemy;
+
+            if (numActiveLargeEnemies > numActiveEnemies) {
+                enemy = enemies.get();
+            } else {
+                enemy = largeEnemies.get();
+            }
+
             //console.log("Making new enemy - "+enemy);
             if (enemy)
             {
                 //enemy.setInteractive(true);
-                enemy.on("pointerdown", function(pointer) { console.log("enemy pointer down")}, this);
                 enemy.setActive(true);
                 enemy.setVisible(true);
                 enemy.startOnPath();

@@ -11,6 +11,7 @@ public class MapDTO {
     List<WayDTO> ways;
     int width;
     int height;
+    List<NestDTO> nests;
 
     public MapDTO() {
         ways = new ArrayList<>();
@@ -51,5 +52,19 @@ class NodeDTO {
     long id;
 
     int order;
+}
+
+@Data
+@AllArgsConstructor
+class NestDTO {
+    int x;
+    int y;
+
+    float lat;
+    float lon;
+
+    long id;
+
+    String type;
 }
 

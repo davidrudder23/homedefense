@@ -33,15 +33,19 @@ public class MapsRepository {
         template = new CassandraTemplate(session);
     }
 
-    public void insertNode(Node node) {
+    public void insert(Node node) {
         template.insert(node);
     }
 
-    public void insertWay(Way way) {
+    public void insert(Nest nest) {
+        template.insert(nest);
+    }
+
+    public void insert(Way way) {
         template.insert(way);
     }
 
-    public void insertWayNode(WayNode wayNode) {
+    public void insert(WayNode wayNode) {
 
         wayNode.getWayNodeKey().setPartitionId(
                 Math.round((wayNode.getWayNodeKey().getLon() + 180) * 200) +
@@ -49,6 +53,16 @@ public class MapsRepository {
                 Math.round((wayNode.getWayNodeKey().getLat() + 180) * 200));
         template.insert(wayNode);
     }
+
+    public void insertNest(Nest nest) {
+
+        nest.getPoint().setPartitionId(
+                Math.round((nest.getPoint().getLon() + 180) * 200) +
+                        "x" +
+                        Math.round((nest.getPoint().getLat() + 180) * 200));
+        template.insert(nest);
+    }
+
 
     public Node getNode(long nodeId) {
         Select select = QueryBuilder.select().from("node")
@@ -90,15 +104,37 @@ public class MapsRepository {
                 }).flatMap(List::stream)
                 .collect(Collectors.toList());
 
-
-        /*
-        Select select = QueryBuilder.select().from("wayNode")
-                .where(QueryBuilder.in("partition_id", partitionIds))
-                .limit(1000000);
-        List<WayNode> wayNodes = template.select(select, WayNode.class);
-*/
         return wayNodes;
 
+    }
+
+    public List<Nest> getNests(float north, float west, float south, float east) {
+        int northPartitionId = Math.round((north + 180) * 200);
+        int westPartitionId = Math.round((west + 180) * 200);
+        int southPartitionId = Math.round((south + 180) * 200);
+        int eastPartitionId = Math.round((east + 180) * 200);
+
+        List<String> partitionIds = new ArrayList<>();
+
+        for (int x = westPartitionId; x <= eastPartitionId; x++) {
+            for (int y = southPartitionId; y <= northPartitionId; y++) {
+                String partitionId = x + "x" + y;
+                partitionIds.add(partitionId);
+            }
+        }
+
+        List<Nest> nests = partitionIds
+                .stream()
+                .parallel()
+                .map(partitionId -> {
+                    Select select = QueryBuilder.select().from("nest")
+                            .where(QueryBuilder.eq("partition_id", partitionId))
+                            .limit(1000000);
+                    return template.select(select, Nest.class);
+                }).flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        return nests;
     }
 
     public WayNode getPreviousWayNodeForWay(long way, int firstOrder, int partitionId) {

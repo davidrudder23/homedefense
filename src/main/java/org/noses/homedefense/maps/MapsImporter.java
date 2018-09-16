@@ -1,14 +1,9 @@
 package org.noses.homedefense.maps;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import io.netty.handler.codec.compression.Bzip2Decoder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.cassandra.core.CassandraOperations;
-import org.springframework.data.cassandra.core.CassandraTemplate;
 import org.springframework.stereotype.Component;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -92,7 +87,7 @@ public class MapsImporter extends DefaultHandler {
             node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
             node.getPoint().setLon(parseFloat(attributes.getValue("lon")));
 
-            mapsRepository.insertNode(node);
+            mapsRepository.insert(node);
             //log.info("count={}", count++);
         } else if (qName.equalsIgnoreCase("way")) {
             if (way != null) {
@@ -163,7 +158,7 @@ public class MapsImporter extends DefaultHandler {
 
                 // TODO: don't insert ways. They're not technically necessary, but in for
                 // debugging purposes
-                //mapsRepository.insertWay(way);
+                //mapsRepository.insert(way);
 
                 for (WayNode wayNode : wayNodes) {
                     Node node = mapsRepository.getNode(wayNode.getNode());
@@ -177,7 +172,7 @@ public class MapsImporter extends DefaultHandler {
                     wayNode.setMaxSpeed(way.getMaxSpeed());
                     wayNode.setOneWay(way.isOneWay());
 
-                    mapsRepository.insertWayNode(wayNode);
+                    mapsRepository.insert(wayNode);
                 }
             }
             way = null;
