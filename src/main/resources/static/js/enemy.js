@@ -13,26 +13,33 @@ var Enemy = new Phaser.Class({
       },
       startOnPath: function ()
       {
-
-          console.log("Start on path, hp="+this.hp);
-          if (paths.length<=0) {
+          if (nests.getChildren().length<=0) {
               return;
           }
           this.follower.t = 0;
 
-          var availablePathNums = [];
+          var nestNum = getRandomInt(nests.getChildren().length);
+
+          var x = 0;
+          var y = 0;
+
           for (var i = 0; i < paths.length; i++) {
-              if (paths[i].startPoint.x<0 || paths[i].startPoint.y<0) {
-                  availablePathNums[availablePathNums.length] = i;
-              }
+            if (paths[i].curves) {
+                for (var j = 0; j < paths[i].curves.length; j++) {
+                  var nestChildren = nests.getChildren();
+                  if (paths[i].curves[j].p0.x ==  nestChildren[nestNum].x && paths[i].curves[j].p0.y ==  nestChildren[nestNum].y) {
+                      this.pathNum = i;
+                      x = paths[i].curves[j].p0.x;
+                      y = paths[i].curves[j].p0.y;
+                      break;
+                  }
+                }
+            }
           }
 
-          console.log(availablePathNums);
-          this.pathNum = availablePathNums[getRandomInt(availablePathNums.length)];
-          this.direction=1;
           paths[this.pathNum].getPoint(this.follower.t, this.follower.vec);
 
-          this.setPosition(this.follower.vec.x, this.follower.vec.y);
+          this.setPosition(x, y);
           $("#messages").text("An enemy is coming on "+paths[this.pathNum].name+"!!");
       },
       receiveDamage: function(damage) {
@@ -49,12 +56,86 @@ var Enemy = new Phaser.Class({
       update: function (time, delta)
       {
           var path = paths[this.pathNum];
+
+          var startingPoint = path.getPoint(this.follower.t, this.follower.vec);
           this.follower.t += this.direction * ENEMY_SPEED * delta * path.speed;
-          path.getPoint(this.follower.t, this.follower.vec);
+          var endingPoint = path.getPoint(this.follower.t, this.follower.vec);
+
+          if (startingPoint && endingPoint) {
+              for (var c = 0 ; c < path.curves.length; c++) {
+                var curveX = Math.round(path.curves[c].p0.x);
+                var curveY = Math.round(path.curves[c].p0.y);
+
+                var startingX = Math.round(startingPoint.x);
+                var startingY = Math.round(startingPoint.y);
+                var endingX = Math.round(endingPoint.x);
+                var endingY = Math.round(endingPoint.y);
+
+                if (((curveX >= startingX) && (curveX <= endingX) &&
+                    (curveY >= startingY) && (curveY <= endingY)) ||
+                    ((curveX <= startingX) && (curveX >= endingX) &&
+                    (curveY <= startingY) && (curveY >= endingY))) {
+
+                    var intersections = [];
+                    intersections[0] = {
+                        x: curveX,
+                        y: curveY,
+                        pathNum: this.pathNum
+                    };
+                    for (var i = 0; i < path.intersections.length; i++) {
+                        if ((path.intersections[i].x == curveX) &&
+                            (path.intersections[i].y == curveY)) {
+                            var intersectionPathNum = path.intersections[i].pathNum;
+                            var intersectionPath = paths[intersectionPathNum];
+                            console.log("Crossing intersection on "+path.name+" and "+intersectionPath.name);
+                            intersections[intersections.length] = {
+                                x: path.intersections[i].x,
+                                y: path.intersections[i].y,
+                                pathNum: intersectionPathNum
+                            }
+                        }
+                    }
+
+                    if (intersections.length>1) {
+                        var intersectionNum = getRandomInt(intersections.length);
+                        this.pathNum = intersections[intersectionNum].pathNum;
+                        // figure out how far along the path we are
+                        var startX = paths[this.pathNum].curves[0].p0.x;
+                        var startY = paths[this.pathNum].curves[0].p0.y;
+
+                        var pathNumCurves = paths[this.pathNum].curves.length - 1;
+                        var endX = paths[this.pathNum].curves[pathNumCurves].p1.x;
+                        var endY = paths[this.pathNum].curves[pathNumCurves].p1.y;
+
+                        var lenX = Math.abs(startX - endX);
+                        var lenY = Math.abs(startY - endY);
+
+                        if (lenX > lenY) {
+                            var distX = Math.abs(intersections[intersectionNum].x - startX);
+                            if (distX == 0) {
+                                this.follower.t = 0;
+                            } else {
+                                this.follower.t = distX/lenX;
+                            }
+                        } else {
+                            var distY = Math.abs(intersections[intersectionNum].y - startY);
+                            if (distY == 0) {
+                                this.follower.t = 0;
+                            } else {
+                                this.follower.t = distY /lenY ;
+                            }
+                        }
+
+                        console.log("new t="+this.follower.t+" on "+paths[this.pathNum].name+" with mph="+paths[this.pathNum].speed);
+
+                    }
+                }
+              }
+          }
 
           this.setPosition(this.follower.vec.x, this.follower.vec.y);
 
-          if (this.follower.t >= 1)
+          if ((this.follower.t >= 1) || (this.follower.t < 0))
           {
               var foundNewPath = false;
               for (var i = 0 ; i < paths.length; i++) {

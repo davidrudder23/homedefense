@@ -24,6 +24,7 @@ var currentWest = 0;
 var paths = [];
 var turrets;
 var home;
+var nests = [];
 var enemies, largeEnemies;
 
 var globals = {};
@@ -104,12 +105,7 @@ var Nest = new Phaser.Class({
             this.y = y;
         },
         fire: function() {
-            var enemy = getEnemy(this.x, this.y, 200);
-            if(enemy) {
-                var angle = Phaser.Math.Angle.Between(this.x, this.y, enemy.x, enemy.y);
-                addBullet(this.x, this.y, angle);
-                this.angle = (angle + Math.PI/2) * Phaser.Math.RAD_TO_DEG;
-            }
+
         },
         update: function (time, delta)
         {
@@ -220,6 +216,9 @@ function create() {
     turrets = this.add.group({ classType: Turret, runChildUpdate: true });
 
     home = this.add.group({ classType: Home, runChildUpdate: true });
+
+    nests = this.add.group({ classType: Nest, runChildUpdate: true });
+
     this.physics.add.overlap(enemies, home, damageHome);
     this.physics.add.overlap(largeEnemies, home, damageHome);
 
@@ -259,14 +258,47 @@ function create() {
 
                 count++;
             });
+
+            $.each(data.nests, function(index, nest) {
+                placeNest(nest.x, nest.y);
+            });
             placeHome();
 
             scoreText = globals.add.text(16, 16, 'Score: 0', { fontSize: '18px', fill: '#2255ff', backgroundColor: '#fff' });
 
             globals.input.on('pointerdown', placeTurret);
+
+            setupIntersections();
          }
     });
 
+}
+
+function setupIntersections() {
+    for (var p = 0; p < paths.length; p++) {
+        paths[p].intersections = [];
+
+        for (var n = 0; n < paths[p].curves.length; n++) {
+            for (var x = 0; x < paths.length; x++) {
+                if (x == p) {
+                    continue;
+                }
+                for (var y = 0; y < paths[x].curves.length; y++) {
+                    if ((paths[p].curves[n].p0.x == paths[x].curves[y].p0.x) &&
+                        (paths[p].curves[n].p0.y == paths[x].curves[y].p0.y)) {
+                            //placeNest(paths[p].curves[n].p0.x, paths[p].curves[n].p0.y);
+                            var i = paths[p].intersections.length;
+                            paths[p].intersections[i] = {
+                                x: paths[p].curves[n].p0.x,
+                                y: paths[p].curves[n].p0.y,
+                                pathNum: x
+                            };
+                    }
+                }
+            }
+        }
+
+    }
 }
 
 function damageEnemy(enemy, bullet) {  
@@ -345,6 +377,18 @@ function placeHome(pointer) {
         house.setActive(true);
         house.setVisible(true);
         house.place(320, 240);
+    }
+}
+
+function placeNest(x, y) {
+    console.log("placing nest "+x+"x"+y);
+    var nest = nests.get();
+    console.log(nest);
+    if (nest)
+    {
+        nest.setActive(true);
+        nest.setVisible(true);
+        nest.place(x, y);
     }
 }
 

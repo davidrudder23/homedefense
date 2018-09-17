@@ -83,7 +83,7 @@ public class MapsService {
                                      float north, float west, float south, float east) {
         List<Nest> nests = mapsRepository.getNests(north, west, south, east);
 
-        if ((nests == null) || (nests.size() == 0)) {
+        if ((nests == null) || (nests.size() < 3)) {
             nests = new ArrayList<>();
             Nest nest = new Nest();
 
