@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.GET;
+import java.util.List;
 
 @RestController
 @RequestMapping("/maps")
@@ -47,6 +48,12 @@ public class MapsResource {
         float east = (float)(accountDTO.getHomeLongitude()+0.0150);
 
         return new ResponseEntity<MapDTO>(mapsService.readMap(width, height, north, west, south, east), HttpStatus.OK);
+    }
+
+    @GET
+    @RequestMapping(value="/destinations", method=RequestMethod.GET)
+    public ResponseEntity<List<DestinationDTO>> getDestinations() {
+        return new ResponseEntity<>(mapsService.getDestinations(), HttpStatus.OK);
     }
 
 }

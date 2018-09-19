@@ -83,7 +83,7 @@ public class MapsService {
                                      float north, float west, float south, float east) {
         List<Nest> nests = mapsRepository.getNests(north, west, south, east);
 
-        if ((nests == null) || (nests.size() < 3)) {
+        while ((nests == null) || (nests.size() < 3)) {
             nests = new ArrayList<>();
             Nest nest = new Nest();
 
@@ -99,6 +99,7 @@ public class MapsService {
 
             nests.add(nest);
             mapsRepository.insert(nest);
+            nests = mapsRepository.getNests(north, west, south, east);
         }
 
         List<NestDTO> nestDTOs = nests.stream()
@@ -110,6 +111,11 @@ public class MapsService {
                 .collect(Collectors.toList());
 
         return nestDTOs;
+    }
+
+    public List<DestinationDTO> getDestinations() {
+        List<Destination> destinations = mapsRepository.getDestinations();
+        return destinations.stream().map(d->new DestinationDTO(d)).collect(Collectors.toList());
     }
 
 }

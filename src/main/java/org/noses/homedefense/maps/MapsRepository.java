@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -52,6 +53,11 @@ public class MapsRepository {
                 "x" +
                 Math.round((wayNode.getWayNodeKey().getLat() + 180) * 200));
         template.insert(wayNode);
+    }
+
+    public void insert(Destination destination) {
+        destination.getKey().setId(UUID.randomUUID().toString());
+        template.insert(destination);
     }
 
     public void insertNest(Nest nest) {
@@ -184,6 +190,13 @@ public class MapsRepository {
                 .limit(100000);
         List<Way> ways = template.select(select, Way.class);
         return ways;
+    }
 
+    public List<Destination> getDestinations() {
+        Select select = QueryBuilder.select().from("destination")
+                .where(QueryBuilder.eq("partition_id", "destination"))
+                .limit(100000);
+        List<Destination> destinations= template.select(select, Destination.class);
+        return destinations;
     }
 }

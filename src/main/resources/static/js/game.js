@@ -50,7 +50,9 @@ function getRandomInt(max) {
 
 function getEnemy(x, y, distance) {
     var enemyUnits = enemies.getChildren();
-    for(var i = 0; i < enemyUnits.length; i++) {       
+    enemyUnits = enemyUnits.concat(largeEnemies.getChildren());
+
+    for(var i = 0; i < enemyUnits.length; i++) {
         if(enemyUnits[i].active && Phaser.Math.Distance.Between(x, y, enemyUnits[i].x, enemyUnits[i].y) < distance)
             return enemyUnits[i];
     }
