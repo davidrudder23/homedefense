@@ -31,6 +31,8 @@ var Enemy = new Phaser.Class({
                       this.pathNum = i;
                       x = paths[i].curves[j].p0.x;
                       y = paths[i].curves[j].p0.y;
+
+                      this.follower.t = getTFromPointOnPath(x, y, paths[i]);
                       break;
                   }
                 }
@@ -87,7 +89,7 @@ var Enemy = new Phaser.Class({
                             (path.intersections[i].y == curveY)) {
                             var intersectionPathNum = path.intersections[i].pathNum;
                             var intersectionPath = paths[intersectionPathNum];
-                            console.log("Crossing intersection on "+path.name+" and "+intersectionPath.name);
+                            //console.log("Crossing intersection on "+path.name+" and "+intersectionPath.name);
                             intersections[intersections.length] = {
                                 x: path.intersections[i].x,
                                 y: path.intersections[i].y,
@@ -98,36 +100,15 @@ var Enemy = new Phaser.Class({
 
                     if (intersections.length>1) {
                         var intersectionNum = getRandomInt(intersections.length);
-                        this.pathNum = intersections[intersectionNum].pathNum;
-                        // figure out how far along the path we are
-                        var startX = paths[this.pathNum].curves[0].p0.x;
-                        var startY = paths[this.pathNum].curves[0].p0.y;
+                        if (intersections[intersectionNum].pathNum != this.pathNum) {
+                            this.pathNum = intersections[intersectionNum].pathNum;
+                            // figure out how far along the path we are
+                            this.follower.t = getTFromPointOnPath(intersections[intersectionNum].x,
+                                                                  intersections[intersectionNum].y,
+                                                                  paths[this.pathNum]);
 
-                        var pathNumCurves = paths[this.pathNum].curves.length - 1;
-                        var endX = paths[this.pathNum].curves[pathNumCurves].p1.x;
-                        var endY = paths[this.pathNum].curves[pathNumCurves].p1.y;
-
-                        var lenX = Math.abs(startX - endX);
-                        var lenY = Math.abs(startY - endY);
-
-                        if (lenX > lenY) {
-                            var distX = Math.abs(intersections[intersectionNum].x - startX);
-                            if (distX == 0) {
-                                this.follower.t = 0;
-                            } else {
-                                this.follower.t = distX/lenX;
-                            }
-                        } else {
-                            var distY = Math.abs(intersections[intersectionNum].y - startY);
-                            if (distY == 0) {
-                                this.follower.t = 0;
-                            } else {
-                                this.follower.t = distY /lenY ;
-                            }
+                            console.log(intersections.length+" intersections new t="+this.follower.t+" on "+paths[this.pathNum].name+" with mph="+paths[this.pathNum].speed);
                         }
-
-                        console.log("new t="+this.follower.t+" on "+paths[this.pathNum].name+" with mph="+paths[this.pathNum].speed);
-
                     }
                 }
               }
@@ -159,6 +140,35 @@ var Enemy = new Phaser.Class({
       },
 
 });
+
+function getTFromPointOnPath(pointX, pointY, path) {
+    var startX = path.curves[0].p0.x;
+    var startY = path.curves[0].p0.y;
+
+    var pathNumCurves = path.curves.length - 1;
+    var endX = path.curves[pathNumCurves].p1.x;
+    var endY = path.curves[pathNumCurves].p1.y;
+
+    var lenX = Math.abs(startX - endX);
+    var lenY = Math.abs(startY - endY);
+
+    if (lenX > lenY) {
+        var distX = Math.abs(pointX - startX);
+        if (distX == 0) {
+            return 0;
+        } else {
+            return distX/lenX;
+        }
+    } else {
+        var distY = Math.abs(pointY - startY);
+        if (distY == 0) {
+            return 0;
+        } else {
+            return distY /lenY ;
+        }
+    }
+
+}
 
 var LargeEnemy = new Phaser.Class({
     Extends: Enemy,
