@@ -13,6 +13,11 @@ public class MapDTO {
     int height;
     List<NestDTO> nests;
 
+    float north;
+    float south;
+    float east;
+    float west;
+
     public MapDTO() {
         ways = new ArrayList<>();
     }

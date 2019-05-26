@@ -1,40 +1,43 @@
 <html>
+
 <head>
-    <title>HomeDefense</title>
-    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="js/phaser.min.js"></script>
-    <script src="js/enemy.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/authentication.js"></script>
-    <script>
-
-        checkLoggedIn();
-    </script>
+  <title>HomeDefense</title>
+  <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/phaser@3.13.0/dist/phaser.js"></script>
+  <script src="js/enemy.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/button.js"></script>
+  <script src="js/authentication.js"></script>
+  <script>
+    checkLoggedIn();
+  </script>
 </head>
+
 <body>
-<div id="header">
-    HomeDefense is a Tower Defense Game where you defend your own home.  It's based on the geolocation in your browser and Open Street Maps to
-    build the paths the enemies travel.  It is very much a work in progress.
-</div>
+  <div id="header">
+    HomeDefense is a Tower Defense Game where you defend your own home. It's based on the geolocation in your browser and Open Street Maps to
+    build the paths the enemies travel. It is very much a work in progress.
+  </div>
 
-<div id="changeGeo">
+  <div id="changeGeo">
     <a href="home.html">Click here to change your home location</a>
-</div>
+  </div>
 
-<div id="content" style="display: block; width: 100%; text-align: center"></div>
+  <div id="content" style="display: block; width: 100%; text-align: center"></div>
 
-<div id="debug" style="display: hidden">
-</div>
+  <div id="debug" style="display: hidden">
+  </div>
 
-<div id="messages" style="display: hidden">
-</div>
+  <div id="messages" style="display: hidden">
+  </div>
 
-<div id="credits">
+  <div id="credits">
     <h3>Made with: </h3>
-    <img src="assets/Public-images-osm_logo.png" style="max-height: 48" title="Open Street Maps"/>
-    <img src="assets/phaser3.png" style="max-height: 48" title="Phaser 3"/>
+    <img src="assets/Public-images-osm_logo.png" style="max-height: 48" title="Open Street Maps" />
+    <img src="assets/phaser3.png" style="max-height: 48" title="Phaser 3" />
 
-</div>
+  </div>
 
 </body>
+
 </html>

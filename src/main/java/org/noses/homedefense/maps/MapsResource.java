@@ -42,10 +42,10 @@ public class MapsResource {
             return new ResponseEntity<MapDTO>(new MapDTO(), HttpStatus.UNAUTHORIZED);
         }
 
-        float north = (float)(accountDTO.getHomeLatitude()+0.0075);
-        float west = (float)(accountDTO.getHomeLongitude()-0.0150);
-        float south = (float)(accountDTO.getHomeLatitude()-0.0075);
-        float east = (float)(accountDTO.getHomeLongitude()+0.0150);
+        float north = (float)(accountDTO.getHomeLongitude()+0.0075);
+        float west = (float)(accountDTO.getHomeLatitude()-0.0150);
+        float south = (float)(accountDTO.getHomeLongitude()-0.0075);
+        float east = (float)(accountDTO.getHomeLatitude()+0.0150);
 
         return new ResponseEntity<MapDTO>(mapsService.readMap(width, height, north, west, south, east), HttpStatus.OK);
     }

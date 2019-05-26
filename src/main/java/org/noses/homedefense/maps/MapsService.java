@@ -28,10 +28,10 @@ public class MapsService {
         HashMap<Long, Way> ways = new HashMap<>();
         for (WayNode wayNode : wayNodes) {
             Long wayId = wayNode.getWay();
-            if ((wayNode.getWayNodeKey().getLon() >= west) &&
-                    (wayNode.getWayNodeKey().getLon() <= east) &&
-                    (wayNode.getWayNodeKey().getLat() >= south) &&
-                    (wayNode.getWayNodeKey().getLat() <= north)) {
+            if ((wayNode.getWayNodeKey().getLon() >= south) &&
+                    (wayNode.getWayNodeKey().getLon() <= north) &&
+                    (wayNode.getWayNodeKey().getLat() >= west) &&
+                    (wayNode.getWayNodeKey().getLat() <= east)) {
                 Way way = ways.get(wayId);
                 if (way == null) {
                     way = new Way();
@@ -49,6 +49,11 @@ public class MapsService {
         MapDTO mapDTO = new MapDTO();
         mapDTO.setWidth(width);
         mapDTO.setHeight(height);
+
+        mapDTO.setNorth(north);
+        mapDTO.setSouth(south);
+        mapDTO.setEast(east);
+        mapDTO.setWest(west);
 
         float pixelHeight = Math.abs(north - south) / height;
         float pixelWidth = Math.abs(east - west) / width;

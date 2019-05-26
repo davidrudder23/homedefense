@@ -57,7 +57,7 @@ function getEnemy(x, y, distance) {
             return enemyUnits[i];
     }
     return false;
-} 
+}
 
 var Turret = new Phaser.Class({
 
@@ -70,7 +70,7 @@ var Turret = new Phaser.Class({
             Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'turret');
             this.nextTic = 0;
         },
-        place: function(i, j) {            
+        place: function(i, j) {
             this.y = i * 64 + 64/2;
             this.x = j * 64 + 64/2;
         },
@@ -148,7 +148,7 @@ var Home = new Phaser.Class({
             }
         }
 });
-    
+
 var Bullet = new Phaser.Class({
 
         Extends: Phaser.GameObjects.Image,
@@ -172,7 +172,7 @@ var Bullet = new Phaser.Class({
             this.setVisible(true);
             //  Bullets fire from the middle of the screen to the given x/y
             this.setPosition(x, y);
-            
+
         //  we don't need to rotate the bullets as they are round
         //    this.setRotation(angle);
 
@@ -198,7 +198,7 @@ var Bullet = new Phaser.Class({
 
     });
 
- 
+
 function create() {
     // bomb if no session, but this should have already been taken care of
     var sessionToken = localStorage.getItem("sessionToken");
@@ -303,13 +303,13 @@ function setupIntersections() {
     }
 }
 
-function damageEnemy(enemy, bullet) {  
+function damageEnemy(enemy, bullet) {
     // only if both enemy and bullet are alive
     if (enemy.active === true && bullet.active === true) {
         // we remove the bullet right away
         bullet.setActive(false);
-        bullet.setVisible(false);    
-        
+        bullet.setVisible(false);
+
         // decrease the enemy hp with BULLET_DAMAGE
         enemy.receiveDamage(BULLET_DAMAGE);
     }
@@ -333,10 +333,16 @@ function update(time, delta) {
         if ((numActiveEnemies+numActiveLargeEnemies)<MAX_ENEMIES) {
             var enemy;
 
-            if (numActiveLargeEnemies > numActiveEnemies) {
+//            if (numActiveLargeEnemies > numActiveEnemies) {
+            if (1==1) {
                 enemy = enemies.get();
             } else {
-                enemy = largeEnemies.get();
+                enemy = new LargeEnemy(globals.physics.scene);
+                enemy.prototype = new Enemy(globals.physics.scene);
+
+                console.log(enemy);
+                enemies.add(enemy);
+                //largeEnemies.get();
             }
 
             //console.log("Making new enemy - "+enemy);
@@ -368,7 +374,7 @@ function placeTurret(pointer) {
             turret.setActive(true);
             turret.setVisible(true);
             turret.place(i, j);
-        }   
+        }
     }
 }
 

@@ -6,10 +6,12 @@ var Enemy = new Phaser.Class({
       hp: 0,
       initialize: function Enemy (scene)
       {
+        console.log(scene);
           Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'enemy');
 
           this.follower = { t: 0, vec: new Phaser.Math.Vector2() };
           this.hp = 100;
+
       },
       startOnPath: function ()
       {
@@ -107,7 +109,7 @@ var Enemy = new Phaser.Class({
                                                                   intersections[intersectionNum].y,
                                                                   paths[this.pathNum]);
 
-                            console.log(intersections.length+" intersections new t="+this.follower.t+" on "+paths[this.pathNum].name+" with mph="+paths[this.pathNum].speed);
+                            //console.log(intersections.length+" intersections new t="+this.follower.t+" on "+paths[this.pathNum].name+" with mph="+paths[this.pathNum].speed);
                         }
                     }
                 }
@@ -174,7 +176,8 @@ var LargeEnemy = new Phaser.Class({
     Extends: Enemy,
     initialize: function Enemy (scene)
           {
-              Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'turret');
+              //Phaser.GameObjects.Image.call(this, scene, 0, 0, 'sprites', 'turret');
+              //this.prototype.initialize(scene);
 
               this.follower = { t: 0, vec: new Phaser.Math.Vector2() };
               this.hp = 1000;
