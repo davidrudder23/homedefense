@@ -11,8 +11,8 @@ public class DestinationDTO {
 
     String id;
 
-    float lat;
-    float lon;
+    double lat;
+    double lon;
 
     String name;
     String description;

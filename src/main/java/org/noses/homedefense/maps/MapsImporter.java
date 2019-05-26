@@ -84,8 +84,8 @@ public class MapsImporter extends DefaultHandler {
         if (qName.equalsIgnoreCase("node") && (1 == 1)) {
             Node node = new Node();
             node.getPoint().setId(parseLong(attributes.getValue("id")));
-            node.getPoint().setLat(parseFloat(attributes.getValue("lat")));
-            node.getPoint().setLon(parseFloat(attributes.getValue("lon")));
+            node.getPoint().setLat(parseDouble(attributes.getValue("lat")));
+            node.getPoint().setLon(parseDouble(attributes.getValue("lon")));
 
             mapsRepository.insert(node);
             //log.info("count={}", count++);
@@ -197,11 +197,11 @@ public class MapsImporter extends DefaultHandler {
         }
     }
 
-    float parseFloat(String input) {
+    double parseDouble(String input) {
         try {
-            return Float.parseFloat(input);
+            return Double.parseDouble(input);
         } catch (Exception e) {
-            log.warn("Could not parse {} as a float", input);
+            log.warn("Could not parse {} as a double", input);
             return 0;
         }
     }

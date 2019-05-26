@@ -24,9 +24,9 @@ class PointOfInterestKey {
     private String partitionId;
 
     @PrimaryKeyColumn(name = "lat", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private float lat;
+    private double lat;
 
     @PrimaryKeyColumn(name = "lon", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private float lon;
+    private double lon;
 
 }

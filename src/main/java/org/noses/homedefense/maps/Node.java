@@ -29,10 +29,10 @@ class Point {
     private long id;
 
     @PrimaryKeyColumn(name = "lat", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private float lat;
+    private double lat;
 
     @PrimaryKeyColumn(name = "lon", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private float lon;
+    private double lon;
 
     public void setId(long id) {
         this.id = id;

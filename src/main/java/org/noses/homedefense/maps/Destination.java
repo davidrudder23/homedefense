@@ -16,8 +16,8 @@ public class Destination {
     @PrimaryKey
     private DestinationKey key;
 
-    private float lat;
-    private float lon;
+    private double lat;
+    private double lon;
 
     private String name;
     private String description;

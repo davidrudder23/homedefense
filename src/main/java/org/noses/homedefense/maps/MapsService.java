@@ -26,8 +26,8 @@ public class MapsService {
         HashMap<Long, Way> ways = new HashMap<>();
         for (WayNode wayNode : wayNodes) {
             Long wayId = wayNode.getWay();
-            System.out.println(wayNode.getWayNodeKey().getLon() + " vs " + south);
-            System.out.println(wayNode.getWayNodeKey().getLat() + " vs " + east);
+            //System.out.println(wayNode.getWayNodeKey().getLon() + " vs " + south);
+            //System.out.println(wayNode.getWayNodeKey().getLat() + " vs " + east);
             if ((wayNode.getWayNodeKey().getLat() >= south) &&
                     (wayNode.getWayNodeKey().getLat() <= north) &&
                     (wayNode.getWayNodeKey().getLon() >= west) &&
@@ -45,8 +45,6 @@ public class MapsService {
                 }
             }
         }
-
-        System.out.println("Ways size=" + ways.size());
 
         MapDTO mapDTO = new MapDTO();
 
@@ -69,7 +67,6 @@ public class MapsService {
                             wayNode.getWayNodeKey().getLat(), wayNode.getWayNodeKey().getLon(),
                             wayNode.getWayNodeKey().getId(), wayNode.getOrderNum()));
                 }
-                System.out.println("Adding way to map " + wayDTO.getName());
                 mapDTO.getWays().add(wayDTO);
             }
         }

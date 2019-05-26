@@ -8,8 +8,8 @@ public class AccountDTO {
     private String email;
     private String username;
     private String token;
-    private float homeLongitude;
-    private float homeLatitude;
+    private double homeLongitude;
+    private double homeLatitude;
 
     public static AccountDTO get(Account account) {
         AccountDTO accountDTO = new AccountDTO();

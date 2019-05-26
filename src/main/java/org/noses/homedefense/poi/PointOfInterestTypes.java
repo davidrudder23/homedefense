@@ -7,7 +7,7 @@ public class PointOfInterestTypes {
 
     private String name;
 
-    private float weight;
+    private double weight;
 
-    private float radius;
+    private double radius;
 }

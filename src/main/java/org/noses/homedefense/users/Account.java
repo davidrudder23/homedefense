@@ -22,9 +22,9 @@ public class Account
 
     private BigInteger score;
 
-    private float homeLongitude;
+    private double homeLongitude;
 
-    private float homeLatitude;
+    private double homeLatitude;
 
     private String hashedPassword;
 
