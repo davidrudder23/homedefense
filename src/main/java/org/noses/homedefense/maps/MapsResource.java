@@ -23,35 +23,33 @@ public class MapsResource {
     AccountService accountService;
 
     @GET
-    @RequestMapping(value="/import/{city}", method= RequestMethod.GET)
+    @RequestMapping(value = "/import/{city}", method = RequestMethod.GET)
     public void doImport(@PathVariable("city") String city) throws Exception {
         mapsImporter.doImport(city);
     }
 
     @GET
-    @RequestMapping(value="/{width}/{height}", method= RequestMethod.GET)
-    public ResponseEntity<MapDTO> getMap(@RequestHeader("X-Authorization-Token") String authorizationToken, @PathVariable("width") int width,
-                       @PathVariable("height") int height) {
+    @RequestMapping(value = "/{north}/{south}/{east}/{west}", method = RequestMethod.GET)
+    public ResponseEntity<MapDTO> getMap(@RequestHeader("X-Authorization-Token") String authorizationToken,
+                                         @PathVariable("north") double north,
+                                         @PathVariable("south") double south,
+                                         @PathVariable("east") double east,
+                                         @PathVariable("west") double west) {
 
-        if (StringUtils.isEmpty(authorizationToken)) {
+        /*if (StringUtils.isEmpty(authorizationToken)) {
             new ResponseEntity<String>("unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
         AccountDTO accountDTO = accountService.getAccountByToken(authorizationToken);
         if (accountDTO == null) {
             return new ResponseEntity<MapDTO>(new MapDTO(), HttpStatus.UNAUTHORIZED);
-        }
+        }*/
 
-        float north = (float)(accountDTO.getHomeLongitude()+0.0075);
-        float west = (float)(accountDTO.getHomeLatitude()-0.0150);
-        float south = (float)(accountDTO.getHomeLongitude()-0.0075);
-        float east = (float)(accountDTO.getHomeLatitude()+0.0150);
-
-        return new ResponseEntity<MapDTO>(mapsService.readMap(width, height, north, west, south, east), HttpStatus.OK);
+        return new ResponseEntity<MapDTO>(mapsService.readMap(north, south, east, west), HttpStatus.OK);
     }
 
     @GET
-    @RequestMapping(value="/destinations", method=RequestMethod.GET)
+    @RequestMapping(value = "/destinations", method = RequestMethod.GET)
     public ResponseEntity<List<DestinationDTO>> getDestinations() {
         return new ResponseEntity<>(mapsService.getDestinations(), HttpStatus.OK);
     }

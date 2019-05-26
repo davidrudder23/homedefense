@@ -9,14 +9,12 @@ import java.util.List;
 @Data
 public class MapDTO {
     List<WayDTO> ways;
-    int width;
-    int height;
     List<NestDTO> nests;
 
-    float north;
-    float south;
-    float east;
-    float west;
+    double north;
+    double south;
+    double east;
+    double west;
 
     public MapDTO() {
         ways = new ArrayList<>();
@@ -48,11 +46,8 @@ class WayDTO {
 @Data
 @AllArgsConstructor
 class NodeDTO {
-    int x;
-    int y;
-
-    float lat;
-    float lon;
+    double lat;
+    double lon;
 
     long id;
 
@@ -62,11 +57,8 @@ class NodeDTO {
 @Data
 @AllArgsConstructor
 class NestDTO {
-    int x;
-    int y;
-
-    float lat;
-    float lon;
+    double lat;
+    double lon;
 
     long id;
 

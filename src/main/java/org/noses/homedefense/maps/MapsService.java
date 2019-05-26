@@ -15,12 +15,10 @@ public class MapsService {
     @Autowired
     MapsRepository mapsRepository;
 
-    public MapDTO readMap(int width,
-                          int height,
-                          float north,
-                          float west,
-                          float south,
-                          float east) {
+    public MapDTO readMap(double north,
+                          double south,
+                          double east,
+                          double west) {
         List<WayNode> wayNodes = mapsRepository.getWayNodes(north, west, south, east)
                 .stream()
                 .sorted(Comparator.comparingInt(WayNode::getOrderNum))
@@ -28,10 +26,12 @@ public class MapsService {
         HashMap<Long, Way> ways = new HashMap<>();
         for (WayNode wayNode : wayNodes) {
             Long wayId = wayNode.getWay();
-            if ((wayNode.getWayNodeKey().getLon() >= south) &&
-                    (wayNode.getWayNodeKey().getLon() <= north) &&
-                    (wayNode.getWayNodeKey().getLat() >= west) &&
-                    (wayNode.getWayNodeKey().getLat() <= east)) {
+            System.out.println(wayNode.getWayNodeKey().getLon() + " vs " + south);
+            System.out.println(wayNode.getWayNodeKey().getLat() + " vs " + east);
+            if ((wayNode.getWayNodeKey().getLat() >= south) &&
+                    (wayNode.getWayNodeKey().getLat() <= north) &&
+                    (wayNode.getWayNodeKey().getLon() >= west) &&
+                    (wayNode.getWayNodeKey().getLon() <= east)) {
                 Way way = ways.get(wayId);
                 if (way == null) {
                     way = new Way();
@@ -46,17 +46,14 @@ public class MapsService {
             }
         }
 
+        System.out.println("Ways size=" + ways.size());
+
         MapDTO mapDTO = new MapDTO();
-        mapDTO.setWidth(width);
-        mapDTO.setHeight(height);
 
         mapDTO.setNorth(north);
         mapDTO.setSouth(south);
         mapDTO.setEast(east);
         mapDTO.setWest(west);
-
-        float pixelHeight = Math.abs(north - south) / height;
-        float pixelWidth = Math.abs(east - west) / width;
 
         for (Way way : ways.values()) {
             WayDTO wayDTO = new WayDTO();
@@ -68,24 +65,22 @@ public class MapsService {
             List<WayNode> wayNodesForWay = wayNodes.stream().filter(wn -> wn.getWay() == way.getId()).collect(Collectors.toList());
             if (wayNodesForWay.size() > 0) {
                 for (WayNode wayNode : wayNodesForWay) {
-                    int x = (int) ((wayNode.getWayNodeKey().getLon() - west) / pixelWidth);
-                    int y = height - (int) ((wayNode.getWayNodeKey().getLat() - south) / pixelHeight);
-                    wayDTO.getNodes().add(new NodeDTO(x, y,
+                    wayDTO.getNodes().add(new NodeDTO(
                             wayNode.getWayNodeKey().getLat(), wayNode.getWayNodeKey().getLon(),
                             wayNode.getWayNodeKey().getId(), wayNode.getOrderNum()));
                 }
+                System.out.println("Adding way to map " + wayDTO.getName());
                 mapDTO.getWays().add(wayDTO);
             }
         }
 
-        List<NestDTO> nests = setupNests(mapDTO, height, pixelWidth, pixelHeight, north, west, south, east);
-        mapDTO.setNests(nests);
+        //List<NestDTO> nests = setupNests(mapDTO, north, west, south, east);
+        //mapDTO.setNests(nests);
         return mapDTO;
     }
 
-    private List<NestDTO> setupNests(MapDTO mapDTO, int height,
-                                     float pixelWidth, float pixelHeight,
-                                     float north, float west, float south, float east) {
+    private List<NestDTO> setupNests(MapDTO mapDTO,
+                                     double north, double west, double south, double east) {
         List<Nest> nests = mapsRepository.getNests(north, west, south, east);
 
         while ((nests == null) || (nests.size() < 3)) {
@@ -109,9 +104,7 @@ public class MapsService {
 
         List<NestDTO> nestDTOs = nests.stream()
                 .map(nest -> {
-                    int x = (int) ((nest.getPoint().getLon() - west) / pixelWidth);
-                    int y = height - (int) ((nest.getPoint().getLat() - south) / pixelHeight);
-                    return new NestDTO(x, y, nest.getPoint().getLat(), nest.getPoint().getLon(), nest.getPoint().getId(), "standard");
+                    return new NestDTO(nest.getPoint().getLat(), nest.getPoint().getLon(), nest.getPoint().getId(), "standard");
                 })
                 .collect(Collectors.toList());
 
@@ -120,7 +113,7 @@ public class MapsService {
 
     public List<DestinationDTO> getDestinations() {
         List<Destination> destinations = mapsRepository.getDestinations();
-        return destinations.stream().map(d->new DestinationDTO(d)).collect(Collectors.toList());
+        return destinations.stream().map(d -> new DestinationDTO(d)).collect(Collectors.toList());
     }
 
 }

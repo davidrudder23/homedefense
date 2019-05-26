@@ -84,16 +84,16 @@ public class MapsRepository {
         }
     }
 
-    public List<WayNode> getWayNodes(float north, float west, float south, float east) {
-        int northPartitionId = Math.round((north + 180) * 200) + 1;
-        int westPartitionId = Math.round((west + 180) * 200) - 1;
-        int southPartitionId = Math.round((south + 180) * 200) - 1;
-        int eastPartitionId = Math.round((east + 180) * 200) + 1;
+    public List<WayNode> getWayNodes(double north, double west, double south, double east) {
+        long northPartitionId = Math.round((north + 180) * 200) + 1;
+        long westPartitionId = Math.round((west + 180) * 200) - 1;
+        long southPartitionId = Math.round((south + 180) * 200) - 1;
+        long eastPartitionId = Math.round((east + 180) * 200) + 1;
 
         List<String> partitionIds = new ArrayList<>();
 
-        for (int x = westPartitionId; x <= eastPartitionId; x++) {
-            for (int y = southPartitionId; y <= northPartitionId; y++) {
+        for (long x = westPartitionId; x <= eastPartitionId; x++) {
+            for (long y = southPartitionId; y <= northPartitionId; y++) {
                 String partitionId = x + "x" + y;
                 partitionIds.add(partitionId);
             }
@@ -114,16 +114,16 @@ public class MapsRepository {
 
     }
 
-    public List<Nest> getNests(float north, float west, float south, float east) {
-        int northPartitionId = Math.round((north + 180) * 200);
-        int westPartitionId = Math.round((west + 180) * 200);
-        int southPartitionId = Math.round((south + 180) * 200);
-        int eastPartitionId = Math.round((east + 180) * 200);
+    public List<Nest> getNests(double north, double west, double south, double east) {
+        long northPartitionId = Math.round((north + 180) * 200);
+        long westPartitionId = Math.round((west + 180) * 200);
+        long southPartitionId = Math.round((south + 180) * 200);
+        long eastPartitionId = Math.round((east + 180) * 200);
 
         List<String> partitionIds = new ArrayList<>();
 
-        for (int x = westPartitionId; x <= eastPartitionId; x++) {
-            for (int y = southPartitionId; y <= northPartitionId; y++) {
+        for (long x = westPartitionId; x <= eastPartitionId; x++) {
+            for (long y = southPartitionId; y <= northPartitionId; y++) {
                 String partitionId = x + "x" + y;
                 partitionIds.add(partitionId);
             }

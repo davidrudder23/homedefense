@@ -29,7 +29,7 @@ public class Nest {
                 Math.round((getPoint().getLat() + 180) * 200);
     }
 
-    public static String getPartitionId(float lat, float lon) {
+    public static String getPartitionId(double lat, double lon) {
         return Math.round((lon + 180) * 200) +
                 "x" +
                 Math.round((lat + 180) * 200);
@@ -49,8 +49,8 @@ class NestPoint {
     private long id;
 
     @PrimaryKeyColumn(name = "lat", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private float lat;
+    private double lat;
 
     @PrimaryKeyColumn(name = "lon", ordinal = 0, type = PrimaryKeyType.CLUSTERED)
-    private float lon;
+    private double lon;
 }
