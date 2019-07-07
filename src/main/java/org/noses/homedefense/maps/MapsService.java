@@ -1,5 +1,6 @@
 package org.noses.homedefense.maps;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -9,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class MapsService {
 
@@ -71,8 +73,8 @@ public class MapsService {
             }
         }
 
-        //List<NestDTO> nests = setupNests(mapDTO, north, west, south, east);
-        //mapDTO.setNests(nests);
+        List<NestDTO> nests = setupNests(mapDTO, north, west, south, east);
+        mapDTO.setNests(nests);
         return mapDTO;
     }
 
@@ -90,6 +92,10 @@ public class MapsService {
                     .filter(n -> (n.getLat() > south) && (n.getLat() < north) && (n.getLon() > west) && (n.getLon() < east))
                     .collect(Collectors.toList());
 
+            if ((availableNodes == null) || (availableNodes.size()==0)) {
+                break;
+            }
+
             NodeDTO node = availableNodes.get((int) (Math.random() * availableNodes.size()));
 
             nest.setPoint(new NestPoint(Nest.getPartitionId(node.getLat(), node.getLon()), node.getId(), node.getLat(), node.getLon()));
@@ -99,9 +105,13 @@ public class MapsService {
             nests = mapsRepository.getNests(north, west, south, east);
         }
 
+        if (nests == null) {
+            return new ArrayList<>();
+        }
+
         List<NestDTO> nestDTOs = nests.stream()
                 .map(nest -> {
-                    return new NestDTO(nest.getPoint().getLat(), nest.getPoint().getLon(), nest.getPoint().getId(), "standard");
+                    return new NestDTO(nest.getPoint().getLat(), nest.getPoint().getLon(), nest.getPoint().getId(), nest.getType());
                 })
                 .collect(Collectors.toList());
 

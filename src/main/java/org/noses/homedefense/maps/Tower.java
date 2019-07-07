@@ -1,9 +1,7 @@
 package org.noses.homedefense.maps;
 
-import lombok.Data;
+public class Tower {
 
-@Data
-public class TowerDTO {
     double longitude;
     double latitude;
 }

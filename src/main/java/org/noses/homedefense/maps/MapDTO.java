@@ -65,3 +65,12 @@ class NestDTO {
     String type;
 }
 
+@Data
+@AllArgsConstructor
+class TowerDTO {
+    double longitude;
+    double latitude;
+
+    String towerType;
+}
+
