@@ -15,5 +15,5 @@ phases:
 artifacts:
   type: zip
   files:
-    - 'build/libs/*.jar'
+    - 'target/*.jar'
 
