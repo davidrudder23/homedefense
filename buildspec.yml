@@ -6,7 +6,8 @@ phases:
      java: openjdk8
    commands:
      - echo Entering install phase...
-     - echo Nothing to do now
+     - apt-get update -y 
+     - apt-get install -y maven
   build:
     commands:
      - echo Build started on `date`
