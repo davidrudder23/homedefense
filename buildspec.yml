@@ -2,6 +2,8 @@ version: 0.1
 
 phases:
   install:
+   runtime-versions:
+     java: openjdk8
    commands:
      - echo Entering install phase...
      - echo Nothing to do now
