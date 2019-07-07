@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
    runtime-versions:
-     aws/codebuild/java: openjdk-8
+     java: openjdk8
    commands:
      - echo Entering install phase...
      - echo Nothing to do now
