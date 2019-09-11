@@ -6,6 +6,7 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyClass;
 import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
+import org.springframework.util.StringUtils;
 
 @Table
 @Data
@@ -24,6 +25,9 @@ public class AccountSession {
     private String email;
 
     public static String getPartitionIdFromToken(String token) {
+        if (StringUtils.isEmpty(token) || token.length() < 4) {
+            return null;
+        }
         return token.substring(token.length()-4);
     }
 }

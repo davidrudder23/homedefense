@@ -23,10 +23,11 @@ public class HomedefenseConfig extends AbstractCassandraConfiguration {
 
     @Override
     protected List<CreateKeyspaceSpecification> getKeyspaceCreations() {
-        //CreateKeyspaceSpecification specification = CreateKeyspaceSpecification.createKeyspace(KEYSPACE);
+        CreateKeyspaceSpecification specification = CreateKeyspaceSpecification.createKeyspace(KEYSPACE);
+        specification = specification.ifNotExists(true);
 
-        //return Arrays.asList(specification);
-        return new ArrayList<>();
+        return Arrays.asList(specification);
+        //return new ArrayList<>();
     }
 
     @Override
